@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue';
 import { theme } from './theme';
 import { tabStore } from './stores/tabStore';
+import { getTabType } from './registry/tabTypeRegistry';
 import TabBar from './components/TabBar.vue';
 import PanelContainer from './components/PanelContainer.vue';
 import ContentContainer from './components/ContentContainer.vue';
@@ -23,7 +24,6 @@ function handleSelectTabType(type: string) {
   showTypeSelector.value = false;
 
   // 获取类型定义生成标题
-  const { getTabType } = require('./registry/tabTypeRegistry');
   const tabType = getTabType(type);
   if (!tabType) return;
 
