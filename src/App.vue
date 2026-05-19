@@ -12,7 +12,10 @@ import StatusBar from './components/StatusBar.vue';
 import TabTypeSelector from './components/TabTypeSelector.vue';
 
 const showTypeSelector = ref(false);
+const panelPinned = ref(true);
+const panelVisible = ref(true);
 let draggedTabId: string | null = null;
+let edgeDetectTimer: ReturnType<typeof setTimeout> | null = null;
 
 // 初始化主题监听
 onMounted(() => {
@@ -30,12 +33,28 @@ onMounted(() => {
       draggedTabId = null;
     }
   });
+
+  // 鼠标边缘检测 - 靠近左边缘时显示面板
+  document.addEventListener('mousemove', handleMouseMove);
 });
 
 onUnmounted(() => {
   eventBus.off('tab-drag-started');
   eventBus.off('tab-drag-ended');
+  document.removeEventListener('mousemove', handleMouseMove);
+  if (edgeDetectTimer) {
+    clearTimeout(edgeDetectTimer);
+  }
 });
+
+function handleMouseMove(e: MouseEvent) {
+  if (panelPinned.value) return;
+  if (e.clientX <= 10) {
+    edgeDetectTimer = setTimeout(() => {
+      panelVisible.value = true;
+    }, 100);
+  }
+}
 
 async function handleCreateWindowFromDrag(tabId: string) {
   const tab = tabStore.state.tabs.find(t => t.id === tabId);
@@ -102,6 +121,17 @@ function handleSelectTabType(type: string) {
 function handleCloseSelector() {
   showTypeSelector.value = false;
 }
+
+function handlePanelPinned(pinned: boolean) {
+  panelPinned.value = pinned;
+  if (pinned) {
+    panelVisible.value = true;
+  }
+}
+
+function handlePanelVisible(visible: boolean) {
+  panelVisible.value = visible;
+}
 </script>
 
 <template>
@@ -109,7 +139,11 @@ function handleCloseSelector() {
     <TabBar @new-tab="handleNewTab" />
 
     <div class="main-area">
-      <PanelContainer />
+      <PanelContainer
+        :visible="panelVisible"
+        @pinned="handlePanelPinned"
+        @visible-change="handlePanelVisible"
+      />
       <ContentContainer />
     </div>
 
