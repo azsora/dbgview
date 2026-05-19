@@ -38,6 +38,8 @@ export type TabEvent =
   | { type: 'tab-created'; tabId: string; tabType: string }
   | { type: 'tab-closed'; tabId: string }
   | { type: 'tab-activated'; tabId: string }
+  | { type: 'tab-drag-started'; tabId: string }
+  | { type: 'tab-drag-ended' }
   | { type: 'tab-dragged-out'; tabId: string; windowId: string }
   | { type: 'tab-dragged-in'; tabId: string; fromWindowId: string }
   | { type: 'config-changed'; tabId: string; config: Record<string, any> }

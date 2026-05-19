@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Tab } from '../types/tab';
+import { eventBus } from '../eventBus';
 
 const props = defineProps<{
   tab: Tab;
@@ -8,12 +9,19 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'click'): void;
   (e: 'close'): void;
-  (e: 'dragstart', event: DragEvent): void;
 }>();
 
 function handleDragStart(e: DragEvent) {
-  e.dataTransfer?.setData('text/plain', props.tab.id);
-  emit('dragstart', e);
+  if (e.dataTransfer) {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', props.tab.id);
+  }
+  // 通知全局开始拖拽
+  eventBus.emit({ type: 'tab-drag-started', tabId: props.tab.id });
+}
+
+function handleDragEnd(e: DragEvent) {
+  eventBus.emit({ type: 'tab-drag-ended' });
 }
 </script>
 
@@ -21,9 +29,11 @@ function handleDragStart(e: DragEvent) {
   <div
     class="tab-item"
     :class="{ active: tab.isActive }"
+    :data-tab-id="tab.id"
     draggable="true"
     @click="emit('click')"
     @dragstart="handleDragStart"
+    @dragend="handleDragEnd"
   >
     <span class="tab-title">{{ tab.title }}</span>
     <button

@@ -18,27 +18,40 @@ function handleTabClose(tabId: string) {
   tabStore.closeTab(tabId);
 }
 
-function handleDragStart(tabId: string, event: DragEvent) {
-  // 单 Tab 时禁止拖出
-  if (tabs.value.length <= 1) {
-    event.preventDefault();
-    return;
+function handleDragOver(event: DragEvent) {
+  event.preventDefault();
+  if (event.dataTransfer) {
+    event.dataTransfer.dropEffect = 'move';
   }
+}
 
-  event.dataTransfer?.setData('application/tab-id', tabId);
+function handleDrop(event: DragEvent) {
+  event.preventDefault();
+  const draggedTabId = event.dataTransfer?.getData('text/plain');
+  if (!draggedTabId) return;
+
+  const targetEl = (event.target as HTMLElement).closest('.tab-item');
+  const targetTabId = targetEl?.getAttribute('data-tab-id');
+  if (!targetTabId || draggedTabId === targetTabId) return;
+
+  const fromIndex = tabs.value.findIndex(t => t.id === draggedTabId);
+  const toIndex = tabs.value.findIndex(t => t.id === targetTabId);
+  if (fromIndex === -1 || toIndex === -1) return;
+
+  const [movedTab] = state.tabs.splice(fromIndex, 1);
+  state.tabs.splice(toIndex, 0, movedTab);
 }
 </script>
 
 <template>
   <div class="tab-bar">
-    <div class="tab-list">
+    <div class="tab-list" @dragover="handleDragOver" @drop="handleDrop">
       <TabItem
         v-for="tab in tabs"
         :key="tab.id"
         :tab="tab"
         @click="handleTabClick(tab.id)"
         @close="handleTabClose(tab.id)"
-        @dragstart="(e) => handleDragStart(tab.id, e)"
       />
     </div>
     <button class="new-tab-btn" @click="emit('newTab')" title="新建标签">

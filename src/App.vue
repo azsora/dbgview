@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { theme } from './theme';
 import { tabStore } from './stores/tabStore';
 import { getTabType } from './registry/tabTypeRegistry';
+import { eventBus } from './eventBus';
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow';
 import TabBar from './components/TabBar.vue';
 import PanelContainer from './components/PanelContainer.vue';
 import ContentContainer from './components/ContentContainer.vue';
@@ -10,11 +12,65 @@ import StatusBar from './components/StatusBar.vue';
 import TabTypeSelector from './components/TabTypeSelector.vue';
 
 const showTypeSelector = ref(false);
+let draggedTabId: string | null = null;
 
 // 初始化主题监听
 onMounted(() => {
   theme.initThemeListener();
+
+  // 监听拖拽开始
+  eventBus.on('tab-drag-started', ({ tabId }) => {
+    draggedTabId = tabId;
+  });
+
+  // 监听拖拽结束
+  eventBus.on('tab-drag-ended', async () => {
+    if (draggedTabId) {
+      await handleCreateWindowFromDrag(draggedTabId);
+      draggedTabId = null;
+    }
+  });
 });
+
+onUnmounted(() => {
+  eventBus.off('tab-drag-started');
+  eventBus.off('tab-drag-ended');
+});
+
+async function handleCreateWindowFromDrag(tabId: string) {
+  const tab = tabStore.state.tabs.find(t => t.id === tabId);
+  if (!tab) return;
+
+  // 检查是否还有效（比如在拖拽结束前已关闭）
+  const currentTab = tabStore.state.tabs.find(t => t.id === tabId);
+  if (!currentTab) return;
+
+  // 生成新窗口 label
+  const windowLabel = `tab_window_${Date.now()}`;
+
+  try {
+    // 创建新窗口
+    const webview = new WebviewWindow(windowLabel, {
+      title: tab.title,
+      width: 800,
+      height: 600,
+      center: true,
+    });
+
+    // 等待窗口创建完成，然后传递 tab 数据
+    webview.once('tauri://created', async () => {
+      // 从当前窗口移除 tab
+      tabStore.removeTab(tabId);
+      eventBus.emit({ type: 'tab-dragged-out', tabId, windowId: windowLabel });
+    });
+
+    webview.once('tauri://error', (e) => {
+      console.error('Failed to create window:', e);
+    });
+  } catch (err) {
+    console.error('Window creation error:', err);
+  }
+}
 
 function handleNewTab() {
   showTypeSelector.value = true;
