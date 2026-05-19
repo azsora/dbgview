@@ -9,7 +9,6 @@ const emit = defineEmits<{
 }>();
 
 const tabs = computed(() => tabStore.state.tabs);
-const canClose = computed(() => tabs.value.length > 1);
 
 function handleTabClick(tabId: string) {
   tabStore.activateTab(tabId);
@@ -37,7 +36,6 @@ function handleDragStart(tabId: string, event: DragEvent) {
         v-for="tab in tabs"
         :key="tab.id"
         :tab="tab"
-        :can-close="canClose"
         @click="handleTabClick(tab.id)"
         @close="handleTabClose(tab.id)"
         @dragstart="(e) => handleDragStart(tab.id, e)"

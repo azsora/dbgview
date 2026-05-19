@@ -1,10 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue';
 import type { Tab } from '../types/tab';
 
 const props = defineProps<{
   tab: Tab;
-  canClose: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -13,13 +11,7 @@ const emit = defineEmits<{
   (e: 'dragstart', event: DragEvent): void;
 }>();
 
-const canDrag = computed(() => true); // 单 Tab 时由父组件控制
-
 function handleDragStart(e: DragEvent) {
-  if (!canDrag.value) {
-    e.preventDefault();
-    return;
-  }
   e.dataTransfer?.setData('text/plain', props.tab.id);
   emit('dragstart', e);
 }
@@ -28,25 +20,16 @@ function handleDragStart(e: DragEvent) {
 <template>
   <div
     class="tab-item"
-    :class="{ active: tab.isActive, 'can-close': canClose }"
+    :class="{ active: tab.isActive }"
     draggable="true"
     @click="emit('click')"
     @dragstart="handleDragStart"
   >
     <span class="tab-title">{{ tab.title }}</span>
     <button
-      v-if="canClose"
       class="tab-close"
       @click.stop="emit('close')"
       title="关闭"
-    >
-      ×
-    </button>
-    <button
-      v-else
-      class="tab-close disabled"
-      disabled
-      title="单标签不允许关闭"
     >
       ×
     </button>

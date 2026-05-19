@@ -72,9 +72,6 @@ function closeTab(tabId: string) {
   const index = state.tabs.findIndex(t => t.id === tabId);
   if (index === -1) return;
 
-  // 单 Tab 不允许关闭
-  if (state.tabs.length === 1) return;
-
   state.tabs.splice(index, 1);
 
   // 如果关闭的是激活 Tab，激活相邻的
