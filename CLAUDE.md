@@ -28,6 +28,11 @@ npm run tauri build
 ├── src/                    # Vue 前端源码
 │   ├── App.vue            # 主应用组件
 │   ├── main.ts            # 前端入口
+│   ├── components/        # UI 组件
+│   │   ├── PanelContainer.vue  # 左配置面板（可钉住/自动隐藏）
+│   │   ├── ContentContainer.vue # 主内容区
+│   │   ├── TabBar.vue     # 标签栏
+│   │   └── StatusBar.vue  # 状态栏
 │   └── assets/            # 静态资源
 │
 ├── src-tauri/             # Rust 后端（Tauri）
@@ -38,6 +43,14 @@ npm run tauri build
 │
 └── package.json           # Node.js 前端依赖和脚本
 ```
+
+## UI 组件特性
+
+### 左配置面板（PanelContainer.vue）
+- **默认钉住**：默认显示，可通过图钉按钮切换钉住状态
+- **自动隐藏**：未钉住时，鼠标离开 1 秒后自动收起
+- **边缘触发**：鼠标靠近窗口左边缘 10px 时自动滑出
+- **钉住效果**：钉住后面板占据固定宽度，主内容区自动让位
 
 ## Tauri 命令
 
