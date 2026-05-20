@@ -7,6 +7,7 @@ import { eventBus } from './eventBus';
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow';
 import TabBar from './components/TabBar.vue';
 import PanelContainer from './components/PanelContainer.vue';
+import RightPanelContainer from './components/RightPanelContainer.vue';
 import ContentContainer from './components/ContentContainer.vue';
 import StatusBar from './components/StatusBar.vue';
 import TabTypeSelector from './components/TabTypeSelector.vue';
@@ -14,8 +15,11 @@ import TabTypeSelector from './components/TabTypeSelector.vue';
 const showTypeSelector = ref(false);
 const panelPinned = ref(true);
 const panelVisible = ref(true);
+const rightPanelPinned = ref(false);
+const rightPanelVisible = ref(false);
 let draggedTabId: string | null = null;
-let edgeDetectTimer: ReturnType<typeof setTimeout> | null = null;
+let leftEdgeTimer: ReturnType<typeof setTimeout> | null = null;
+let rightEdgeTimer: ReturnType<typeof setTimeout> | null = null;
 
 // 初始化主题监听
 onMounted(() => {
@@ -42,16 +46,26 @@ onUnmounted(() => {
   eventBus.off('tab-drag-started');
   eventBus.off('tab-drag-ended');
   document.removeEventListener('mousemove', handleMouseMove);
-  if (edgeDetectTimer) {
-    clearTimeout(edgeDetectTimer);
+  if (leftEdgeTimer) {
+    clearTimeout(leftEdgeTimer);
+  }
+  if (rightEdgeTimer) {
+    clearTimeout(rightEdgeTimer);
   }
 });
 
+// 鼠标边缘检测 - 靠近左边缘时显示左面板，靠近右边缘时显示右面板
 function handleMouseMove(e: MouseEvent) {
-  if (panelPinned.value) return;
-  if (e.clientX <= 10) {
-    edgeDetectTimer = setTimeout(() => {
+  // 左边缘检测
+  if (!panelPinned.value && e.clientX <= 10) {
+    leftEdgeTimer = setTimeout(() => {
       panelVisible.value = true;
+    }, 100);
+  }
+  // 右边缘检测
+  if (!rightPanelPinned.value && e.clientX >= window.innerWidth - 10) {
+    rightEdgeTimer = setTimeout(() => {
+      rightPanelVisible.value = true;
     }, 100);
   }
 }
@@ -132,6 +146,17 @@ function handlePanelPinned(pinned: boolean) {
 function handlePanelVisible(visible: boolean) {
   panelVisible.value = visible;
 }
+
+function handleRightPanelPinned(pinned: boolean) {
+  rightPanelPinned.value = pinned;
+  if (pinned) {
+    rightPanelVisible.value = true;
+  }
+}
+
+function handleRightPanelVisible(visible: boolean) {
+  rightPanelVisible.value = visible;
+}
 </script>
 
 <template>
@@ -145,6 +170,11 @@ function handlePanelVisible(visible: boolean) {
         @visible-change="handlePanelVisible"
       />
       <ContentContainer />
+      <RightPanelContainer
+        :visible="rightPanelVisible"
+        @pinned="handleRightPanelPinned"
+        @visible-change="handleRightPanelVisible"
+      />
     </div>
 
     <StatusBar />

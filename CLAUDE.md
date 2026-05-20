@@ -30,6 +30,7 @@ npm run tauri build
 │   ├── main.ts            # 前端入口
 │   ├── components/        # UI 组件
 │   │   ├── PanelContainer.vue  # 左配置面板（可钉住/自动隐藏）
+│   │   ├── RightPanelContainer.vue # 右属性面板（可钉住/自动隐藏）
 │   │   ├── ContentContainer.vue # 主内容区
 │   │   ├── TabBar.vue     # 标签栏
 │   │   └── StatusBar.vue  # 状态栏
@@ -52,6 +53,12 @@ npm run tauri build
 - **边缘触发**：鼠标靠近窗口左边缘 10px 时自动滑出
 - **钉住效果**：钉住后面板占据固定宽度，主内容区自动让位
 
+### 右属性面板（RightPanelContainer.vue）
+- **默认不钉住**：默认隐藏，鼠标靠近右边缘 10px 时自动滑出
+- **图钉功能**：可通过图钉按钮钉住面板
+- **自动隐藏**：未钉住时，鼠标离开 1 秒后自动收起
+- **钉住效果**：钉住后面板保持显示
+
 ## Tauri 命令
 
 通过 `invoke()` 调用 Rust 后端命令。Rust 端使用 `#[tauri::command]` 属性暴露函数给前端调用。
@@ -72,3 +79,5 @@ npm run tauri build
 1. Rust 后端逻辑应在 `src-tauri/src/lib.rs` 中实现
 2. 前端通过 `@tauri-apps/api/core` 的 `invoke` 方法调用 Rust 命令
 3. 生产构建需同时通过 TypeScript 类型检查
+4. Tab 类型定义在 `src/registry/tabTypeRegistry.ts`，内置类型：`serial`（串口助手）、`debug`（调试助手）
+5. 左右面板根据 Tab 类型的 `configItems` 动态渲染控件

@@ -43,19 +43,8 @@ export const configItemTemplates = {
 // 内置 Tab 类型定义
 const builtinTypes: TabTypeDefinition[] = [
   {
-    type: 'debugger',
-    title: '调试器',
-    configItems: [
-      configItemTemplates.chipModel,
-      configItemTemplates.connectionAddress,
-      configItemTemplates.enableSwitch,
-    ],
-    panelComponent: 'DebuggerPanel',
-    contentComponent: 'DebuggerContent',
-  },
-  {
-    type: 'memory',
-    title: '内存查看',
+    type: 'serial',
+    title: '串口助手',
     configItems: [
       configItemTemplates.connectionAddress,
       {
@@ -76,18 +65,19 @@ const builtinTypes: TabTypeDefinition[] = [
         defaultValue: 32,
       },
     ],
-    panelComponent: 'MemoryPanel',
-    contentComponent: 'MemoryContent',
+    panelComponent: 'serialPanel',
+    contentComponent: 'serialContent',
   },
   {
-    type: 'register',
-    title: '寄存器',
+    type: 'debugger',
+    title: '调试助手',
     configItems: [
+      configItemTemplates.chipModel,
+      configItemTemplates.connectionAddress,
       configItemTemplates.enableSwitch,
-      configItemTemplates.sampleThreshold,
     ],
-    panelComponent: 'RegisterPanel',
-    contentComponent: 'RegisterContent',
+    panelComponent: 'DebuggerPanel',
+    contentComponent: 'DebuggerContent',
   },
 ];
 
