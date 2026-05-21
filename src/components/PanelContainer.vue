@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, ref, onUnmounted } from 'vue';
+import { computed, ref, onUnmounted, watch } from 'vue';
 import { tabStore } from '../stores/tabStore';
 import { getTabType } from '../registry/tabTypeRegistry';
+import { TIMEOUT } from '../constants';
 import type { TabConfigItem } from '../types/tab';
 import SelectControl from './panel/SelectControl.vue';
 import InputControl from './panel/InputControl.vue';
@@ -10,10 +11,18 @@ import SliderControl from './panel/SliderControl.vue';
 
 const props = defineProps<{
   visible?: boolean;
+  initialPinned?: boolean;
 }>();
 
-const isPinned = ref(true);
+const isPinned = ref(props.initialPinned ?? false);
 let hideTimer: ReturnType<typeof setTimeout> | null = null;
+
+// 监听外部传入的 initialPinned 变化
+watch(() => props.initialPinned, (newVal) => {
+  if (newVal !== undefined) {
+    isPinned.value = newVal;
+  }
+});
 
 const isVisible = computed(() => props.visible ?? false);
 
@@ -89,9 +98,13 @@ function renderControl(item: TabConfigItem) {
 
 function handleMouseLeave() {
   if (isPinned.value) return;
+  if (hideTimer) {
+    clearTimeout(hideTimer);
+  }
   hideTimer = setTimeout(() => {
+    hideTimer = null;
     emit('visibleChange', false);
-  }, 1000);
+  }, TIMEOUT.PANEL_HIDE_DELAY);
 }
 
 function handleMouseEnter() {

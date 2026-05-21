@@ -1,4 +1,4 @@
-import { reactive, computed, watch, onMounted } from 'vue';
+import { reactive, computed, watch } from 'vue';
 
 type Theme = 'light' | 'dark';
 

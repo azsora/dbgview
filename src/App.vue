@@ -4,6 +4,7 @@ import { theme } from './theme';
 import { tabStore } from './stores/tabStore';
 import { getTabType } from './registry/tabTypeRegistry';
 import { eventBus } from './eventBus';
+import { TIMEOUT } from './constants';
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow';
 import TabBar from './components/TabBar.vue';
 import PanelContainer from './components/PanelContainer.vue';
@@ -13,15 +14,43 @@ import StatusBar from './components/StatusBar.vue';
 import TabTypeSelector from './components/TabTypeSelector.vue';
 
 const showTypeSelector = ref(false);
-const panelPinned = ref(true);
-const panelVisible = ref(true);
+const panelPinned = ref(false);
+const panelVisible = ref(false);
 const rightPanelPinned = ref(false);
 const rightPanelVisible = ref(false);
 let draggedTabId: string | null = null;
 let leftEdgeTimer: ReturnType<typeof setTimeout> | null = null;
 let rightEdgeTimer: ReturnType<typeof setTimeout> | null = null;
 
-// 初始化主题监听
+// 根据激活标签页更新面板状态
+function updatePanelStateFromActiveTab() {
+  const activeTab = tabStore.activeTab.value;
+  if (!activeTab) {
+    // 无标签页时隐藏面板
+    panelVisible.value = false;
+    rightPanelVisible.value = false;
+    panelPinned.value = false;
+    rightPanelPinned.value = false;
+    return;
+  }
+
+  const tabType = getTabType(activeTab.type);
+  if (!tabType) return;
+
+  // 从标签页类型定义获取面板默认钉住状态
+  panelPinned.value = tabType.leftPanelPinned ?? false;
+  rightPanelPinned.value = tabType.rightPanelPinned ?? false;
+
+  // 根据钉住状态决定是否显示面板
+  if (panelPinned.value) {
+    panelVisible.value = true;
+  }
+  if (rightPanelPinned.value) {
+    rightPanelVisible.value = true;
+  }
+}
+
+// 监听标签页创建、关闭、激活变化
 onMounted(() => {
   theme.initThemeListener();
 
@@ -38,13 +67,24 @@ onMounted(() => {
     }
   });
 
+  // 监听标签页变化
+  eventBus.on('tab-created', () => updatePanelStateFromActiveTab());
+  eventBus.on('tab-closed', () => updatePanelStateFromActiveTab());
+  eventBus.on('tab-activated', () => updatePanelStateFromActiveTab());
+
   // 鼠标边缘检测 - 靠近左边缘时显示面板
   document.addEventListener('mousemove', handleMouseMove);
+
+  // 初始化面板状态
+  updatePanelStateFromActiveTab();
 });
 
 onUnmounted(() => {
   eventBus.off('tab-drag-started');
   eventBus.off('tab-drag-ended');
+  eventBus.off('tab-created');
+  eventBus.off('tab-closed');
+  eventBus.off('tab-activated');
   document.removeEventListener('mousemove', handleMouseMove);
   if (leftEdgeTimer) {
     clearTimeout(leftEdgeTimer);
@@ -56,17 +96,23 @@ onUnmounted(() => {
 
 // 鼠标边缘检测 - 靠近左边缘时显示左面板，靠近右边缘时显示右面板
 function handleMouseMove(e: MouseEvent) {
+  if (!tabStore.activeTab.value) return;
+
   // 左边缘检测
   if (!panelPinned.value && e.clientX <= 10) {
+    if (leftEdgeTimer) clearTimeout(leftEdgeTimer);
     leftEdgeTimer = setTimeout(() => {
+      leftEdgeTimer = null;
       panelVisible.value = true;
-    }, 100);
+    }, TIMEOUT.EDGE_TRIGGER_DELAY);
   }
   // 右边缘检测
   if (!rightPanelPinned.value && e.clientX >= window.innerWidth - 10) {
+    if (rightEdgeTimer) clearTimeout(rightEdgeTimer);
     rightEdgeTimer = setTimeout(() => {
+      rightEdgeTimer = null;
       rightPanelVisible.value = true;
-    }, 100);
+    }, TIMEOUT.EDGE_TRIGGER_DELAY);
   }
 }
 
@@ -94,7 +140,7 @@ async function handleCreateWindowFromDrag(tabId: string) {
     webview.once('tauri://created', async () => {
       // 从当前窗口移除 tab
       tabStore.removeTab(tabId);
-      eventBus.emit({ type: 'tab-dragged-out', tabId, windowId: windowLabel });
+      eventBus.emit('tab-dragged-out', { tabId, windowId: windowLabel });
     });
 
     webview.once('tauri://error', (e) => {
@@ -166,12 +212,14 @@ function handleRightPanelVisible(visible: boolean) {
     <div class="main-area">
       <PanelContainer
         :visible="panelVisible"
+        :initial-pinned="panelPinned"
         @pinned="handlePanelPinned"
         @visible-change="handlePanelVisible"
       />
       <ContentContainer />
       <RightPanelContainer
         :visible="rightPanelVisible"
+        :initial-pinned="rightPanelPinned"
         @pinned="handleRightPanelPinned"
         @visible-change="handleRightPanelVisible"
       />

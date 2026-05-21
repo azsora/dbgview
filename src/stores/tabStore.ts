@@ -63,7 +63,7 @@ function createTab(type: string, title: string, config: Record<string, any> = {}
   state.tabs.push(tab);
   state.activeTabId = tab.id;
 
-  eventBus.emit({ type: 'tab-created', tabId: tab.id, tabType: type });
+  eventBus.emit('tab-created', { tabId: tab.id, tabType: type });
 
   return tab;
 }
@@ -83,7 +83,7 @@ function closeTab(tabId: string) {
     }
   }
 
-  eventBus.emit({ type: 'tab-closed', tabId });
+  eventBus.emit('tab-closed', { tabId });
 }
 
 function activateTab(tabId: string) {
@@ -94,7 +94,7 @@ function activateTab(tabId: string) {
   tab.isActive = true;
   state.activeTabId = tabId;
 
-  eventBus.emit({ type: 'tab-activated', tabId });
+  eventBus.emit('tab-activated', { tabId });
 }
 
 function updateTabConfig(tabId: string, config: Record<string, any>) {
@@ -102,7 +102,7 @@ function updateTabConfig(tabId: string, config: Record<string, any>) {
   if (!tab) return;
 
   tab.config = { ...tab.config, ...config };
-  eventBus.emit({ type: 'config-changed', tabId, config: tab.config });
+  eventBus.emit('config-changed', { tabId, config: tab.config });
 }
 
 function removeTab(tabId: string) {

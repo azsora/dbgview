@@ -1,17 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { tabStore } from '../stores/tabStore';
-import { getTabType } from '../registry/tabTypeRegistry';
 import EmptyPage from './EmptyPage.vue';
 
 const activeTab = computed(() => tabStore.activeTab.value);
-
-const contentComponent = computed(() => {
-  if (!activeTab.value) return null;
-
-  const tabType = getTabType(activeTab.value.type);
-  return tabType?.contentComponent ?? null;
-});
 </script>
 
 <template>

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { ref } from 'vue';
 import { getAllTabTypes } from '../registry/tabTypeRegistry';
 
 const emit = defineEmits<{

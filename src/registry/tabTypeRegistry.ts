@@ -1,5 +1,5 @@
 // src/registry/tabTypeRegistry.ts
-import type { TabTypeDefinition, TabConfigItem } from '../types/tab';
+import type { TabTypeDefinition } from '../types/tab';
 
 // 内置配置项模板
 export const configItemTemplates = {
@@ -67,6 +67,8 @@ const builtinTypes: TabTypeDefinition[] = [
     ],
     panelComponent: 'serialPanel',
     contentComponent: 'serialContent',
+    leftPanelPinned: true,
+    rightPanelPinned: false,
   },
   {
     type: 'debugger',
@@ -78,6 +80,8 @@ const builtinTypes: TabTypeDefinition[] = [
     ],
     panelComponent: 'DebuggerPanel',
     contentComponent: 'DebuggerContent',
+    leftPanelPinned: true,
+    rightPanelPinned: true,
   },
 ];
 

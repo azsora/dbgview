@@ -31,17 +31,20 @@ export interface TabTypeDefinition {
   configItems: TabConfigItem[];
   panelComponent: string;  // 组件名称
   contentComponent: string;  // 组件名称
+  leftPanelPinned?: boolean;   // 左面板默认钉住状态
+  rightPanelPinned?: boolean; // 右面板默认钉住状态
 }
 
-/** 事件总线类型 */
-export type TabEvent =
-  | { type: 'tab-created'; tabId: string; tabType: string }
-  | { type: 'tab-closed'; tabId: string }
-  | { type: 'tab-activated'; tabId: string }
-  | { type: 'tab-drag-started'; tabId: string }
-  | { type: 'tab-drag-ended' }
-  | { type: 'tab-dragged-out'; tabId: string; windowId: string }
-  | { type: 'tab-dragged-in'; tabId: string; fromWindowId: string }
-  | { type: 'config-changed'; tabId: string; config: Record<string, any> }
-  | { type: 'main-window-closing' }
-  | { type: 'child-window-closing'; windowId: string };
+/** 事件总线类型 - mitt 适配格式 */
+export type TabEvent = {
+  'tab-created': { tabId: string; tabType: string };
+  'tab-closed': { tabId: string };
+  'tab-activated': { tabId: string };
+  'tab-drag-started': { tabId: string };
+  'tab-drag-ended': {};
+  'tab-dragged-out': { tabId: string; windowId: string };
+  'tab-dragged-in': { tabId: string; fromWindowId: string };
+  'config-changed': { tabId: string; config: Record<string, any> };
+  'main-window-closing': {};
+  'child-window-closing': { windowId: string };
+};

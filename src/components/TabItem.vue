@@ -17,11 +17,11 @@ function handleDragStart(e: DragEvent) {
     e.dataTransfer.setData('text/plain', props.tab.id);
   }
   // 通知全局开始拖拽
-  eventBus.emit({ type: 'tab-drag-started', tabId: props.tab.id });
+  eventBus.emit('tab-drag-started', { tabId: props.tab.id });
 }
 
-function handleDragEnd(e: DragEvent) {
-  eventBus.emit({ type: 'tab-drag-ended' });
+function handleDragEnd(_e: DragEvent) {
+  eventBus.emit('tab-drag-ended', {});
 }
 </script>
 

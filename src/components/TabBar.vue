@@ -2,7 +2,6 @@
 import { computed } from 'vue';
 import { tabStore } from '../stores/tabStore';
 import TabItem from './TabItem.vue';
-import { getTabType } from '../registry/tabTypeRegistry';
 
 const emit = defineEmits<{
   (e: 'newTab'): void;
@@ -38,8 +37,8 @@ function handleDrop(event: DragEvent) {
   const toIndex = tabs.value.findIndex(t => t.id === targetTabId);
   if (fromIndex === -1 || toIndex === -1) return;
 
-  const [movedTab] = state.tabs.splice(fromIndex, 1);
-  state.tabs.splice(toIndex, 0, movedTab);
+  const [movedTab] = tabStore.state.tabs.splice(fromIndex, 1);
+  tabStore.state.tabs.splice(toIndex, 0, movedTab);
 }
 </script>
 
