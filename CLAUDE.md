@@ -29,10 +29,23 @@ npm run tauri build
 │   ├── App.vue            # 主应用组件
 │   ├── main.ts            # 前端入口
 │   ├── constants.ts       # 时间常量（面板隐藏延迟、边缘触发延迟等）
+│   ├── stores/            # 状态管理
+│   │   ├── tabStore.ts    # Tab 状态管理
+│   │   └── serialStore.ts # 串口状态管理
+│   ├── types/             # TypeScript 类型定义
+│   │   └── tab.ts         # Tab 相关类型
+│   ├── registry/          # 注册表
+│   │   └── tabTypeRegistry.ts # Tab 类型注册
 │   ├── components/        # UI 组件
-│   │   ├── PanelContainer.vue  # 左配置面板（可钉住/自动隐藏）
-│   │   ├── RightPanelContainer.vue # 右属性面板（可钉住/自动隐藏）
-│   │   ├── ContentContainer.vue # 主内容区
+│   │   ├── panel/         # 面板相关组件
+│   │   │   ├── PanelContainer.vue     # 左配置面板
+│   │   │   ├── SerialPanelLayout.vue  # 串口面板布局
+│   │   │   ├── FlowControlButtons.vue # 流控按钮
+│   │   │   └── ConnectionStatus.vue   # 连接状态
+│   │   ├── content/       # 内容区组件
+│   │   │   └── SerialContent.vue      # 串口内容区
+│   │   ├── RightPanelContainer.vue    # 右属性面板
+│   │   ├── ContentContainer.vue       # 主内容区
 │   │   ├── TabBar.vue     # 标签栏
 │   │   └── StatusBar.vue  # 状态栏
 │   └── assets/            # 静态资源
@@ -40,7 +53,11 @@ npm run tauri build
 ├── src-tauri/             # Rust 后端（Tauri）
 │   ├── src/
 │   │   ├── lib.rs         # 库入口，定义 Tauri 命令和应用初始化
-│   │   └── main.rs        # 二进制入口，调用 lib::run()
+│   │   ├── main.rs        # 二进制入口，调用 lib::run()
+│   │   ├── serial.rs      # 串口通信核心模块
+│   │   └── commands/      # Tauri 命令模块
+│   │       ├── mod.rs
+│   │       └── serial_commands.rs
 │   └── Cargo.toml         # Rust 依赖配置
 │
 └── package.json           # Node.js 前端依赖和脚本
@@ -72,8 +89,23 @@ npm run tauri build
 ## 依赖说明
 
 - **前端**: Vue 3 (script setup), TypeScript, Vite, Tauri API
-- **后端**: Tauri 2, serde/serde_json (序列化)
+- **后端**: Tauri 2, serde/serde_json (序列化), serial crate (串口通信)
 - **调试库**: probe-rs (嵌入式调试)
+
+## 串口助手功能
+
+串口助手（serial）有独立的面板布局和内容区组件：
+
+**左面板组件**：
+- `SerialPanelLayout.vue` - 串口参数配置面板（端口、波特率、数据位、停止位、校验位）
+- `FlowControlButtons.vue` - 流控按钮（DSR/CTS/DTR/RTS）
+- `ConnectionStatus.vue` - 连接状态指示和打开/关闭按钮
+
+**内容区组件**：
+- `SerialContent.vue` - 数据收发显示、发送区、控制栏（时间戳、模式切换、清除）
+
+**状态管理**：
+- `serialStore.ts` - 串口连接状态、接收缓冲区、发送历史等
 
 ## 调试方法
 
