@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, onUnmounted, watch } from 'vue';
+import { computed, ref, onUnmounted, watch, onMounted } from 'vue';
 import { tabStore } from '../stores/tabStore';
 import { getTabType } from '../registry/tabTypeRegistry';
 import { TIMEOUT } from '../constants';
@@ -8,6 +8,8 @@ import SelectControl from './panel/SelectControl.vue';
 import InputControl from './panel/InputControl.vue';
 import SwitchControl from './panel/SwitchControl.vue';
 import SliderControl from './panel/SliderControl.vue';
+import ConnectionStatus from './panel/ConnectionStatus.vue';
+import { serialStore } from '../stores/serialStore';
 
 const props = defineProps<{
   visible?: boolean;
@@ -47,6 +49,37 @@ const configItems = computed(() => {
   const tabType = getTabType(activeTab.type);
   return tabType?.configItems ?? [];
 });
+
+// 是否为串口类型
+const isSerialTab = computed(() => tabStore.activeTab.value?.type === 'serial');
+
+// 刷新端口列表
+async function refreshPorts() {
+  if (!isSerialTab.value) return;
+
+  const ports = await serialStore.listPorts();
+  const portItem = configItems.value.find((item) => item.key === 'port');
+  if (portItem && portItem.options) {
+    portItem.options = ports.map((p) => ({ label: p, value: p }));
+    // 如果当前选中的端口不在列表中，清空选择
+    const currentPort = activeConfig.value.port;
+    if (currentPort && !ports.includes(currentPort)) {
+      updateConfig('port', '');
+    }
+  }
+}
+
+onMounted(() => {
+  refreshPorts();
+});
+
+// 监听 Tab 切换，刷新端口
+watch(
+  () => tabStore.activeTab.value?.id,
+  () => {
+    refreshPorts();
+  }
+);
 
 function renderControl(item: TabConfigItem) {
   const value = activeConfig.value[item.key] ?? item.defaultValue;
@@ -162,6 +195,7 @@ onUnmounted(() => {
           v-on="renderControl(item)!.on"
         />
       </template>
+      <ConnectionStatus v-if="isSerialTab" />
     </div>
   </div>
 </template>
