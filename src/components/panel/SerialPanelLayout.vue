@@ -129,7 +129,6 @@ watch(
     <!-- 流控按钮 -->
     <div class="control-row">
       <FlowControlButtons
-        label="流控"
         :value="activeConfig.flowControl || ''"
         @update="(v) => updateConfig('flowControl', v)"
       />

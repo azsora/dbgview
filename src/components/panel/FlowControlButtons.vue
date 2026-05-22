@@ -2,7 +2,6 @@
 import { computed } from 'vue';
 
 const props = defineProps<{
-  label: string;
   value: string;
 }>();
 
@@ -37,7 +36,6 @@ function isActive(flow: string) {
 
 <template>
   <div class="flow-control">
-    <label class="flow-label">{{ label }}</label>
     <div class="flow-buttons">
       <button
         v-for="opt in flowOptions"
@@ -57,13 +55,6 @@ function isActive(flow: string) {
   display: flex;
   align-items: center;
   margin-bottom: 12px;
-}
-
-.flow-label {
-  font-size: 12px;
-  color: var(--text-primary);
-  min-width: 48px;
-  margin-right: 8px;
 }
 
 .flow-buttons {
