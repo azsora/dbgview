@@ -47,4 +47,7 @@ export type TabEvent = {
   'config-changed': { tabId: string; config: Record<string, any> };
   'main-window-closing': {};
   'child-window-closing': { windowId: string };
+  'serial-connected': { port: string };
+  'serial-error': { error: string };
+  'serial-disconnected': {};
 };
