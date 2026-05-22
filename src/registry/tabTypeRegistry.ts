@@ -40,33 +40,95 @@ export const configItemTemplates = {
   },
 };
 
+// 串口配置项模板
+export const serialConfigTemplates = {
+  port: {
+    key: 'port',
+    label: '端口',
+    type: 'select' as const,
+    options: [] as { label: string; value: string }[],
+    defaultValue: '',
+  },
+  baudRate: {
+    key: 'baudRate',
+    label: '波特率',
+    type: 'select' as const,
+    options: [
+      { label: '9600', value: 9600 },
+      { label: '19200', value: 19200 },
+      { label: '38400', value: 38400 },
+      { label: '57600', value: 57600 },
+      { label: '115200', value: 115200 },
+      { label: '230400', value: 230400 },
+      { label: '460800', value: 460800 },
+      { label: '921600', value: 921600 },
+    ],
+    defaultValue: 115200,
+  },
+  dataBits: {
+    key: 'dataBits',
+    label: '数据位',
+    type: 'select' as const,
+    options: [
+      { label: '5', value: 5 },
+      { label: '6', value: 6 },
+      { label: '7', value: 7 },
+      { label: '8', value: 8 },
+    ],
+    defaultValue: 8,
+  },
+  stopBits: {
+    key: 'stopBits',
+    label: '停止位',
+    type: 'select' as const,
+    options: [
+      { label: '1', value: 1 },
+      { label: '1.5', value: 1.5 },
+      { label: '2', value: 2 },
+    ],
+    defaultValue: 1,
+  },
+  parity: {
+    key: 'parity',
+    label: '校验位',
+    type: 'select' as const,
+    options: [
+      { label: 'None', value: 'None' },
+      { label: 'Odd', value: 'Odd' },
+      { label: 'Even', value: 'Even' },
+      { label: 'Mark', value: 'Mark' },
+      { label: 'Space', value: 'Space' },
+    ],
+    defaultValue: 'None',
+  },
+  flowControl: {
+    key: 'flowControl',
+    label: '流控',
+    type: 'select' as const,
+    options: [
+      { label: 'None', value: 'None' },
+      { label: 'RTS/CTS', value: 'RTS/CTS' },
+      { label: 'XON/XOFF', value: 'XON/XOFF' },
+    ],
+    defaultValue: 'None',
+  },
+};
+
 // 内置 Tab 类型定义
 const builtinTypes: TabTypeDefinition[] = [
   {
     type: 'serial',
     title: '串口助手',
     configItems: [
-      configItemTemplates.connectionAddress,
-      {
-        key: 'memoryAddress',
-        label: '内存地址',
-        type: 'input',
-        defaultValue: '0x20000000',
-      },
-      {
-        key: 'memorySize',
-        label: '显示大小',
-        type: 'select',
-        options: [
-          { label: '16 字节', value: 16 },
-          { label: '32 字节', value: 32 },
-          { label: '64 字节', value: 64 },
-        ],
-        defaultValue: 32,
-      },
+      serialConfigTemplates.port,
+      serialConfigTemplates.baudRate,
+      serialConfigTemplates.dataBits,
+      serialConfigTemplates.stopBits,
+      serialConfigTemplates.parity,
+      serialConfigTemplates.flowControl,
     ],
     panelComponent: 'serialPanel',
-    contentComponent: 'serialContent',
+    contentComponent: 'SerialContent',
     leftPanelPinned: true,
     rightPanelPinned: false,
   },
