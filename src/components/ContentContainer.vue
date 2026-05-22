@@ -2,13 +2,29 @@
 import { computed } from 'vue';
 import { tabStore } from '../stores/tabStore';
 import EmptyPage from './EmptyPage.vue';
+import SerialContent from './content/SerialContent.vue';
 
 const activeTab = computed(() => tabStore.activeTab.value);
+
+// 根据 tab 类型返回对应的内容组件
+const contentComponent = computed(() => {
+  if (!activeTab.value) return null;
+
+  if (activeTab.value.type === 'serial') {
+    return SerialContent;
+  }
+
+  return null;
+});
 </script>
 
 <template>
   <div class="content-container">
     <EmptyPage v-if="!activeTab" />
+    <component
+      v-else-if="contentComponent"
+      :is="contentComponent"
+    />
     <div v-else class="content-area">
       <!-- 实际项目根据 tab 类型加载对应组件 -->
       <div class="placeholder-content">
