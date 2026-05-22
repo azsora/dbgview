@@ -3,6 +3,7 @@ import { computed } from 'vue';
 
 const props = defineProps<{
   value: string;
+  disabled?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -41,7 +42,8 @@ function isActive(flow: string) {
         v-for="opt in flowOptions"
         :key="opt.key"
         class="flow-btn"
-        :class="{ active: isActive(opt.key) }"
+        :class="{ active: isActive(opt.key), disabled: props.disabled }"
+        :disabled="props.disabled"
         @click="toggleFlow(opt.key)"
       >
         {{ opt.label }}
@@ -54,7 +56,8 @@ function isActive(flow: string) {
 .flow-control {
   display: flex;
   align-items: center;
-  margin-bottom: 12px;
+  justify-content: flex-end;
+  margin-bottom: 5px;
 }
 
 .flow-buttons {
@@ -79,8 +82,13 @@ function isActive(flow: string) {
 }
 
 .flow-btn.active {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
+  background: var(--accent-color);
+  border-color: var(--accent-color);
   color: white;
+}
+
+.flow-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 </style>

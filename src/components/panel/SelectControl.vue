@@ -7,7 +7,16 @@ defineProps<{
 
 const emit = defineEmits<{
   (e: 'update', value: string | number): void;
+  (e: 'focus'): void;
 }>();
+
+function handleChange(e: Event) {
+  emit('update', (e.target as HTMLSelectElement).value);
+}
+
+function handleFocus() {
+  emit('focus');
+}
 </script>
 
 <template>
@@ -16,7 +25,8 @@ const emit = defineEmits<{
     <select
       class="control-input"
       :value="value"
-      @change="emit('update', ($event.target as HTMLSelectElement).value)"
+      @change="handleChange"
+      @focus="handleFocus"
     >
       <option v-for="opt in options" :key="opt.value" :value="opt.value">
         {{ opt.label }}
@@ -27,7 +37,7 @@ const emit = defineEmits<{
 
 <style scoped>
 .control {
-  margin-bottom: 12px;
+  margin-bottom: 5px;
 }
 
 .control-label {

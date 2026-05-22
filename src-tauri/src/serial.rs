@@ -1,5 +1,8 @@
-use serial::{SerialPort, SystemPort};
+use serialport::SerialPort;
 use std::io::{Read, Write};
+
+// 重新导出 serialport 的类型以便其他模块使用
+pub use serialport::{DataBits, FlowControl, Parity, StopBits};
 
 // 串口配置结构
 #[derive(Clone, Debug)]
@@ -10,37 +13,6 @@ pub struct SerialConfig {
     pub stop_bits: StopBits,
     pub parity: Parity,
     pub flow_control: FlowControl,
-}
-
-#[derive(Clone, Debug, Copy)]
-pub enum DataBits {
-    Five,
-    Six,
-    Seven,
-    Eight,
-}
-
-#[derive(Clone, Debug, Copy)]
-pub enum StopBits {
-    One,
-    OnePointFive,
-    Two,
-}
-
-#[derive(Clone, Debug, Copy)]
-pub enum Parity {
-    None,
-    Odd,
-    Even,
-    Mark,
-    Space,
-}
-
-#[derive(Clone, Debug, Copy)]
-pub enum FlowControl {
-    None,
-    RtsCts,
-    XonXoff,
 }
 
 // 串口状态
@@ -54,10 +26,13 @@ pub enum SerialStatus {
 
 // 串口管理器
 pub struct SerialManager {
-    port: Option<SystemPort>,
+    port: Option<BoxSerialPort>,
     status: SerialStatus,
     config: Option<SerialConfig>,
 }
+
+// 使用 Box 包装 serialport::SerialPort 以实现 trait 对象
+type BoxSerialPort = Box<dyn SerialPort>;
 
 impl SerialManager {
     pub fn new() -> Self {
@@ -69,33 +44,26 @@ impl SerialManager {
     }
 
     pub fn list_ports() -> Vec<String> {
-        // 遍历所有可用端口
-        let mut ports = Vec::new();
-        for idx in 0..20 {
-            let port_name = format!("COM{}", idx + 1);
-            if let Ok(port) = serial::open(&port_name) {
-                drop(port);
-                ports.push(port_name);
-            }
+        // 使用 serialport 库的 available_ports() 枚举所有可用端口
+        match serialport::available_ports() {
+            Ok(ports) => ports.into_iter().map(|p| p.port_name).collect(),
+            Err(_) => Vec::new(),
         }
-        ports
     }
 
     pub fn open(&mut self, config: SerialConfig) -> Result<(), String> {
         let port_name = config.port.clone();
         self.status = SerialStatus::Connecting;
 
-        let mut port = serial::open(&port_name).map_err(|e| format!("打开端口失败: {}", e))?;
-
-        // 配置串口参数
-        port.reconfigure(&|settings| {
-            settings.set_baud_rate(serial::Baud9600)?;
-            Ok(())
-        })
-        .map_err(|e| format!("配置端口失败: {}", e))?;
-
-        port.set_timeout(std::time::Duration::from_millis(100))
-            .map_err(|e| format!("设置超时失败: {}", e))?;
+        // 使用 serialport 库打开端口
+        let port = serialport::new(&port_name, config.baud_rate)
+            .data_bits(config.data_bits)
+            .stop_bits(config.stop_bits)
+            .parity(config.parity)
+            .flow_control(config.flow_control)
+            .timeout(std::time::Duration::from_millis(100))
+            .open()
+            .map_err(|e| format!("打开端口失败: {}", e))?;
 
         self.port = Some(port);
         self.config = Some(config);

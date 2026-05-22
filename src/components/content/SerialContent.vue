@@ -8,6 +8,11 @@ const sendInput = ref('');
 // 轮询读取数据
 let readTimer: ReturnType<typeof setInterval> | null = null;
 
+// 接收区是否有数据
+const hasData = computed(() => {
+  return serialStore.state.receiveBuffer && serialStore.state.receiveBuffer.length > 0;
+});
+
 const isStandardMode = computed(() => serialStore.state.workMode === 'standard');
 const isConnected = computed(() => serialStore.isConnected.value);
 
@@ -61,7 +66,6 @@ function stopReading() {
 async function handleSend() {
   if (!sendInput.value.trim()) return;
   await serialStore.sendData(sendInput.value);
-  sendInput.value = '';
 }
 
 function handleKeydown(e: KeyboardEvent) {
@@ -79,8 +83,18 @@ function clearDisplay() {
 <template>
   <div class="serial-content">
     <!-- 数据接收显示区 -->
-    <div ref="receiveArea" class="receive-area">
-      <pre>{{ serialStore.state.receiveBuffer || '无数据' }}</pre>
+    <div
+      ref="receiveArea"
+      class="receive-area"
+      :class="{ 'empty': !hasData }"
+    >
+      <pre v-if="hasData" v-text="serialStore.state.receiveBuffer"></pre>
+      <div v-else class="empty-state">
+        <svg class="empty-icon" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z"/>
+        </svg>
+        <span>无数据</span>
+      </div>
     </div>
 
     <!-- 发送区（标准模式） -->
@@ -167,8 +181,28 @@ function clearDisplay() {
   word-break: break-all;
 }
 
+.receive-area.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .receive-area pre {
   margin: 0;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+}
+
+.empty-icon {
+  width: 48px;
+  height: 48px;
+  opacity: 0.3;
 }
 
 .send-area {
@@ -190,7 +224,9 @@ function clearDisplay() {
   color: var(--text-primary);
   font-family: monospace;
   font-size: 13px;
-  resize: vertical;
+  resize: none;
+  overflow-y: auto;
+  field-sizing: content;
 }
 
 .send-input:focus {
@@ -200,11 +236,17 @@ function clearDisplay() {
 
 .send-btn {
   padding: 4px 16px;
-  background: var(--color-primary);
-  color: white;
-  border: none;
+  border: 1px solid var(--border-color);
   border-radius: 4px;
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  font-size: 13px;
   cursor: pointer;
+  transition: all 0.2s;
+}
+
+.send-btn:hover:not(:disabled) {
+  border-color: var(--accent-color);
 }
 
 .send-btn:disabled {

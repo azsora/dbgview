@@ -32,20 +32,17 @@ pub fn serial_open(
         },
         stop_bits: match stop_bits {
             1.0 => StopBits::One,
-            1.5 => StopBits::OnePointFive,
             2.0 => StopBits::Two,
             _ => StopBits::One,
         },
         parity: match parity.as_str() {
             "Odd" => Parity::Odd,
             "Even" => Parity::Even,
-            "Mark" => Parity::Mark,
-            "Space" => Parity::Space,
             _ => Parity::None,
         },
         flow_control: match flow_control.as_str() {
-            "RTS/CTS" => FlowControl::RtsCts,
-            "XON/XOFF" => FlowControl::XonXoff,
+            "RTS/CTS" => FlowControl::Hardware,
+            "XON/XOFF" => FlowControl::Software,
             _ => FlowControl::None,
         },
     };

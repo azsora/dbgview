@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue';
+import { computed, ref, onMounted, watch } from 'vue';
 import { tabStore } from '../../stores/tabStore';
 import { serialStore } from '../../stores/serialStore';
 import SelectControl from './SelectControl.vue';
 import FlowControlButtons from './FlowControlButtons.vue';
-import ConnectionStatus from './ConnectionStatus.vue';
 
 const activeConfig = computed(() => tabStore.activeTab.value?.config ?? {});
 
@@ -12,6 +11,9 @@ const portOptions = computed(() => {
   // 动态获取端口列表
   return serialStore.state.portList?.map((p) => ({ label: p, value: p })) ?? [];
 });
+
+// 端口列表是否正在刷新
+const isPortRefreshing = ref(false);
 
 const selectItems = [
   { key: 'port', label: '端口', options: [] },
@@ -52,26 +54,73 @@ function updateConfig(key: string, value: any) {
 }
 
 async function refreshPorts() {
-  const ports = await serialStore.listPorts();
-  serialStore.state.portList = ports;
-  // 如果当前选中的端口不在列表中，清空选择
-  const currentPort = activeConfig.value.port;
-  if (currentPort && !ports.includes(currentPort)) {
-    updateConfig('port', '');
+  if (isPortRefreshing.value) return;
+  isPortRefreshing.value = true;
+  try {
+    const ports = await serialStore.listPorts();
+    serialStore.state.portList = ports;
+    // 如果当前选中的端口不在列表中，清空选择
+    const currentPort = activeConfig.value.port;
+    if (currentPort && !ports.includes(currentPort)) {
+      updateConfig('port', '');
+    }
+  } finally {
+    isPortRefreshing.value = false;
   }
 }
 
 onMounted(() => {
+  // 创建标签时扫描一次端口
   refreshPorts();
 });
 
-// 监听 Tab 切换，刷新端口
+// 监听当前激活的串口标签，当切换到新的串口标签时扫描端口
 watch(
   () => tabStore.activeTab.value?.id,
-  () => {
-    refreshPorts();
+  (newTabId, oldTabId) => {
+    if (newTabId !== oldTabId && tabStore.activeTab.value?.type === 'serial') {
+      refreshPorts();
+    }
   }
 );
+
+// 下拉框打开时刷新端口
+function handlePortDropdownOpen() {
+  if (!isPortRefreshing.value) {
+    refreshPorts();
+  }
+}
+
+const isConnected = computed(() => serialStore.isConnected.value);
+const isConnecting = computed(() => serialStore.isConnecting.value);
+
+async function handleToggle() {
+  const config = tabStore.activeTab.value?.config;
+  if (!config?.port) return;
+
+  if (isConnected.value || isConnecting.value) {
+    await serialStore.closePort();
+  } else {
+    await serialStore.openPort({
+      port: config.port,
+      baud_rate: config.baudRate,
+      data_bits: config.dataBits,
+      stop_bits: config.stopBits,
+      parity: config.parity,
+      flow_control: config.flowControl,
+    });
+  }
+}
+
+const buttonText = computed(() => {
+  if (isConnected.value) return '关闭';
+  if (isConnecting.value) return '打开中...';
+  return '打开';
+});
+
+const buttonClass = computed(() => {
+  return isConnected.value ? 'btn-close' : 'btn-open';
+});
 </script>
 
 <template>
@@ -83,6 +132,7 @@ watch(
         :value="activeConfig.port || ''"
         :options="portOptions"
         @update="(v) => updateConfig('port', v)"
+        @focus="handlePortDropdownOpen"
       />
     </div>
 
@@ -130,12 +180,22 @@ watch(
     <div class="control-row">
       <FlowControlButtons
         :value="activeConfig.flowControl || ''"
+        :disabled="!isConnected"
         @update="(v) => updateConfig('flowControl', v)"
       />
     </div>
 
-    <!-- 连接状态 -->
-    <ConnectionStatus />
+    <!-- 打开/关闭按钮 -->
+    <div class="control-row">
+      <button
+        class="toggle-btn"
+        :class="buttonClass"
+        :disabled="isConnecting || !activeConfig.port"
+        @click="handleToggle"
+      >
+        {{ buttonText }}
+      </button>
+    </div>
   </div>
 </template>
 
@@ -146,7 +206,34 @@ watch(
 }
 
 .control-row {
-  margin-bottom: 12px;
+  margin-bottom: 5px;
+}
+
+.toggle-btn {
+  width: 100%;
+  padding: 8px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.toggle-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.toggle-btn:hover:not(:disabled) {
+  border-color: var(--accent-color);
+}
+
+.toggle-btn.btn-close {
+  background: var(--accent-color);
+  border-color: var(--accent-color);
+  color: white;
 }
 
 /* 覆盖 SelectControl 的样式使其单行排列 */

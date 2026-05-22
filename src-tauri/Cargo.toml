@@ -23,8 +23,8 @@ tauri-plugin-opener = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 # 跨平台串口通信
-serial = "0.4"
-
-[target.'cfg(windows)'.dependencies]
-windows = { version = "0.58", features = ["Win32_Foundation", "Win32_System_Ioctl", "Win32_Storage_FileSystem"] }
+serialport = "4"
+# 日志
+log = "0.4"
+env_logger = "0.11"
 

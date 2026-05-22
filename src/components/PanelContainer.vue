@@ -52,6 +52,16 @@ const configItems = computed(() => {
 // 是否为串口类型
 const isSerialTab = computed(() => tabStore.activeTab.value?.type === 'serial');
 
+// 缓存 renderControl 结果，避免重复计算
+const renderedControls = computed(() => {
+  const items = configItems.value;
+  const controls: { key: string; control: ReturnType<typeof renderControl> }[] = new Array(items.length);
+  for (let i = 0; i < items.length; i++) {
+    controls[i] = { key: items[i].key, control: renderControl(items[i]) };
+  }
+  return controls;
+});
+
 function renderControl(item: TabConfigItem) {
   const value = activeConfig.value[item.key] ?? item.defaultValue;
 
@@ -161,12 +171,12 @@ onUnmounted(() => {
       <!-- 串口类型使用专用布局 -->
       <SerialPanelLayout v-if="isSerialTab" />
       <!-- 其他类型使用通用 configItems 渲染 -->
-      <template v-else v-for="item in configItems" :key="item.key">
+      <template v-else v-for="rc in renderedControls" :key="rc.key">
         <component
-          v-if="renderControl(item)"
-          :is="renderControl(item)!.component"
-          v-bind="renderControl(item)!.props"
-          v-on="renderControl(item)!.on"
+          v-if="rc.control"
+          :is="rc.control.component"
+          v-bind="rc.control.props"
+          v-on="rc.control.on"
         />
       </template>
     </div>
@@ -178,7 +188,7 @@ onUnmounted(() => {
   width: 220px;
   background: var(--bg-tertiary);
   border-right: 1px solid var(--border-color);
-  padding: 12px;
+  padding: 5px;
   overflow-y: auto;
   transition: width 0.3s ease, padding 0.3s ease, transform 0.3s ease;
   flex-shrink: 0;
@@ -195,7 +205,7 @@ onUnmounted(() => {
   font-size: 11px;
   color: var(--text-muted);
   text-transform: uppercase;
-  margin-bottom: 12px;
+  margin-bottom: 5px;
   display: flex;
   justify-content: space-between;
   align-items: center;
