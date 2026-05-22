@@ -16,10 +16,13 @@ const contentComponent = computed(() => {
 
   return null;
 });
+
+// 是否为 serial 类型（需要填满内容区）
+const isSerialTab = computed(() => activeTab.value?.type === 'serial');
 </script>
 
 <template>
-  <div class="content-container">
+  <div class="content-container" :class="{ 'no-padding': isSerialTab }">
     <EmptyPage v-if="!activeTab" />
     <component
       v-else-if="contentComponent"
@@ -46,6 +49,10 @@ const contentComponent = computed(() => {
   background: var(--bg-primary);
   padding: 20px;
   overflow: auto;
+}
+
+.content-container.no-padding {
+  padding: 0;
 }
 
 .content-area {
