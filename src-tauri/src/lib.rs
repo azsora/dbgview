@@ -7,7 +7,7 @@ fn greet(name: &str) -> String {
 mod commands;
 mod serial;
 
-use commands::{SerialState, serial_list_ports, serial_open, serial_close, serial_write, serial_read, serial_is_open};
+use commands::{SerialState, serial_list_ports, serial_open, serial_close, serial_write, serial_is_open};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -27,7 +27,6 @@ pub fn run() {
             serial_open,
             serial_close,
             serial_write,
-            serial_read,
             serial_is_open,
         ])
         .run(tauri::generate_context!())

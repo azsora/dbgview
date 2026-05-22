@@ -122,9 +122,13 @@ npm run tauri build
 
 ## 开发注意事项
 
-1. Rust 后端逻辑应在 `src-tauri/src/lib.rs` 中实现
-2. 前端通过 `@tauri-apps/api/core` 的 `invoke` 方法调用 Rust 命令
-3. 生产构建需同时通过 TypeScript 类型检查
-4. Tab 类型定义在 `src/registry/tabTypeRegistry.ts`，内置类型：`serial`（串口助手）、`debug`（调试助手）
+1. **禁止阻塞操作**：永远不得使用阻塞方式执行任何操作。所有耗时操作（IO、网络、串口通信等）必须采用异步/事件驱动方式：
+   - Rust 后端：使用独立线程 + `emit()` 事件推送，或 `tokio` 异步任务
+   - 前端：使用 `async/await` + 事件监听，绝不能用 `setInterval` 轮询
+   - Tauri 命令（`#[tauri::command]`）是同步的，不得在其中执行阻塞 IO
+2. Rust 后端逻辑应在 `src-tauri/src/lib.rs` 中实现
+3. 前端通过 `@tauri-apps/api/core` 的 `invoke` 方法调用 Rust 命令
+4. 生产构建需同时通过 TypeScript 类型检查
+5. Tab 类型定义在 `src/registry/tabTypeRegistry.ts`，内置类型：`serial`（串口助手）、`debug`（调试助手）
    - 每个 Tab 类型可设置 `leftPanelPinned` 和 `rightPanelPinned` 控制面板默认状态
-5. 左右面板根据 Tab 类型的 `configItems` 动态渲染控件
+6. 左右面板根据 Tab 类型的 `configItems` 动态渲染控件

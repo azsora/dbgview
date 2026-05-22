@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { serialStore } from '../../stores/serialStore';
+import { eventBus } from '../../eventBus';
 
 const receiveArea = ref<HTMLElement | null>(null);
 const sendInput = ref('');
 const autoScroll = ref(true);  // 自动滚动，默认开启
-
-// 轮询读取数据
-let readTimer: ReturnType<typeof setInterval> | null = null;
 
 // 接收区是否有数据
 const hasData = computed(() => {
@@ -18,25 +16,25 @@ const isStandardMode = computed(() => serialStore.state.workMode === 'standard')
 const isTerminalMode = computed(() => serialStore.state.workMode === 'terminal');
 const isConnected = computed(() => serialStore.isConnected.value);
 
+// 事件处理函数引用（用于移除监听）
+function onSerialData(payload: { data: number[] }) {
+  if (serialStore.isPortClosing()) return;
+  const bytes = payload.data;
+  if (bytes.length === 0) return;
+  const str = bytesToString(bytes);
+  serialStore.appendReceive(str);
+}
+
 onMounted(() => {
-  if (isConnected.value) {
-    startReading();
-  }
+  // 监听串口数据事件（事件驱动替代轮询）
+  eventBus.on('serial-data', onSerialData);
 });
 
 onUnmounted(() => {
-  stopReading();
+  eventBus.off('serial-data', onSerialData);
 });
 
-watch(isConnected, (connected) => {
-  if (connected) {
-    startReading();
-  } else {
-    stopReading();
-  }
-});
-
-// 自动滚动：当 autoScroll 为 true 且滚动条在底部时自动滚动
+// 自动滚动：当 receiveBuffer 更新且滚动条在底部时自动滚动
 watch(() => serialStore.state.receiveBuffer, () => {
   if (autoScroll.value && receiveArea.value) {
     nextTick(() => {
@@ -46,6 +44,13 @@ watch(() => serialStore.state.receiveBuffer, () => {
     });
   }
 });
+
+// 辅助函数：字节转显示字符串
+function bytesToString(bytes: number[]): string {
+  const hex = bytes.map(b => b.toString(16).padStart(2, '0')).join(' ');
+  const ascii = bytes.map(b => b >= 32 && b < 127 ? String.fromCharCode(b) : '.').join('');
+  return `${hex} |${ascii}|`;
+}
 
 // 检测用户是否手动滚动，如果向上滚动则关闭自动滚动
 function handleScroll() {
@@ -65,25 +70,6 @@ function restoreAutoScroll() {
       receiveArea.value.scrollTop = receiveArea.value.scrollHeight;
     }
   });
-}
-
-function startReading() {
-  if (readTimer) return;
-  readTimer = setInterval(async () => {
-    // 检查端口是否正在关闭或已断开
-    if (!serialStore.isConnected.value || serialStore.isPortClosing()) return;
-    const data = await serialStore.readData();
-    if (data) {
-      serialStore.appendReceive(data);
-    }
-  }, 100);
-}
-
-function stopReading() {
-  if (readTimer) {
-    clearInterval(readTimer);
-    readTimer = null;
-  }
 }
 
 async function handleSend() {

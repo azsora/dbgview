@@ -16,6 +16,7 @@ pub fn serial_list_ports() -> Result<Vec<String>, String> {
 #[tauri::command]
 pub fn serial_open(
     state: State<SerialState>,
+    app_handle: tauri::AppHandle,
     port: String,
     baud_rate: u32,
     data_bits: u8,
@@ -62,6 +63,14 @@ pub fn serial_open(
         Ok(_) => info!("[命令] serial_open 成功: port={}", port),
         Err(e) => info!("[命令] serial_open 失败: port={}, error={}", port, e),
     }
+
+    // 启动后台读取线程
+    if result.is_ok() {
+        if let Err(e) = manager.start_read_thread(app_handle) {
+            error!("[命令] 启动读取线程失败: {}", e);
+        }
+    }
+
     result
 }
 
@@ -93,12 +102,6 @@ pub fn serial_write(state: State<SerialState>, data: Vec<u8>) -> Result<usize, S
         Err(e) => info!("[命令] serial_write 失败: error={}", e),
     }
     result
-}
-
-#[tauri::command]
-pub fn serial_read(state: State<SerialState>) -> Result<Vec<u8>, String> {
-    let mut manager = state.0.lock().map_err(|e| e.to_string())?;
-    manager.read()
 }
 
 #[tauri::command]
