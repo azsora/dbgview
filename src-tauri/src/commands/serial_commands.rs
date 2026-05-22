@@ -1,4 +1,5 @@
 use crate::serial::{DataBits, FlowControl, Parity, SerialConfig, SerialManager, StopBits};
+use log::{info, error};
 use std::sync::Mutex;
 use tauri::State;
 
@@ -6,7 +7,10 @@ pub struct SerialState(pub Mutex<SerialManager>);
 
 #[tauri::command]
 pub fn serial_list_ports() -> Result<Vec<String>, String> {
-    Ok(SerialManager::list_ports())
+    info!("[命令] serial_list_ports 被调用");
+    let result = SerialManager::list_ports();
+    info!("[命令] serial_list_ports 返回: {:?}", result);
+    Ok(result)
 }
 
 #[tauri::command]
@@ -19,10 +23,16 @@ pub fn serial_open(
     parity: String,
     flow_control: String,
 ) -> Result<(), String> {
-    let mut manager = state.0.lock().map_err(|e| e.to_string())?;
+    info!("[命令] serial_open 被调用: port={}, baud_rate={}, data_bits={}, stop_bits={}, parity={}, flow_control={}",
+          port, baud_rate, data_bits, stop_bits, parity, flow_control);
+
+    let mut manager = state.0.lock().map_err(|e| {
+        error!("[命令] 获取串口管理器锁失败: {}", e);
+        e.to_string()
+    })?;
 
     let config = SerialConfig {
-        port,
+        port: port.clone(),
         baud_rate,
         data_bits: match data_bits {
             5 => DataBits::Five,
@@ -47,19 +57,42 @@ pub fn serial_open(
         },
     };
 
-    manager.open(config)
+    let result = manager.open(config);
+    match &result {
+        Ok(_) => info!("[命令] serial_open 成功: port={}", port),
+        Err(e) => info!("[命令] serial_open 失败: port={}, error={}", port, e),
+    }
+    result
 }
 
 #[tauri::command]
 pub fn serial_close(state: State<SerialState>) -> Result<(), String> {
-    let mut manager = state.0.lock().map_err(|e| e.to_string())?;
-    manager.close()
+    info!("[命令] serial_close 被调用");
+    let mut manager = state.0.lock().map_err(|e| {
+        error!("[命令] 获取串口管理器锁失败: {}", e);
+        e.to_string()
+    })?;
+    let result = manager.close();
+    match &result {
+        Ok(_) => info!("[命令] serial_close 成功"),
+        Err(e) => info!("[命令] serial_close 失败: error={}", e),
+    }
+    result
 }
 
 #[tauri::command]
 pub fn serial_write(state: State<SerialState>, data: Vec<u8>) -> Result<usize, String> {
-    let mut manager = state.0.lock().map_err(|e| e.to_string())?;
-    manager.write(&data)
+    info!("[命令] serial_write 被调用: data_len={}", data.len());
+    let mut manager = state.0.lock().map_err(|e| {
+        error!("[命令] 获取串口管理器锁失败: {}", e);
+        e.to_string()
+    })?;
+    let result = manager.write(&data);
+    match &result {
+        Ok(n) => info!("[命令] serial_write 成功: wrote {} bytes", n),
+        Err(e) => info!("[命令] serial_write 失败: error={}", e),
+    }
+    result
 }
 
 #[tauri::command]
@@ -70,6 +103,12 @@ pub fn serial_read(state: State<SerialState>) -> Result<Vec<u8>, String> {
 
 #[tauri::command]
 pub fn serial_is_open(state: State<SerialState>) -> Result<bool, String> {
-    let manager = state.0.lock().map_err(|e| e.to_string())?;
-    Ok(manager.is_open())
+    info!("[命令] serial_is_open 被调用");
+    let manager = state.0.lock().map_err(|e| {
+        error!("[命令] 获取串口管理器锁失败: {}", e);
+        e.to_string()
+    })?;
+    let is_open = manager.is_open();
+    info!("[命令] serial_is_open 返回: {}", is_open);
+    Ok(is_open)
 }

@@ -4,6 +4,7 @@ import { serialStore } from '../../stores/serialStore';
 
 const receiveArea = ref<HTMLElement | null>(null);
 const sendInput = ref('');
+const autoScroll = ref(true);  // 自动滚动，默认开启
 
 // 轮询读取数据
 let readTimer: ReturnType<typeof setInterval> | null = null;
@@ -14,6 +15,7 @@ const hasData = computed(() => {
 });
 
 const isStandardMode = computed(() => serialStore.state.workMode === 'standard');
+const isTerminalMode = computed(() => serialStore.state.workMode === 'terminal');
 const isConnected = computed(() => serialStore.isConnected.value);
 
 onMounted(() => {
@@ -34,9 +36,9 @@ watch(isConnected, (connected) => {
   }
 });
 
-// 自动滚动
+// 自动滚动：当 autoScroll 为 true 且滚动条在底部时自动滚动
 watch(() => serialStore.state.receiveBuffer, () => {
-  if (serialStore.state.autoScroll) {
+  if (autoScroll.value && receiveArea.value) {
     nextTick(() => {
       if (receiveArea.value) {
         receiveArea.value.scrollTop = receiveArea.value.scrollHeight;
@@ -45,10 +47,31 @@ watch(() => serialStore.state.receiveBuffer, () => {
   }
 });
 
+// 检测用户是否手动滚动，如果向上滚动则关闭自动滚动
+function handleScroll() {
+  if (!receiveArea.value) return;
+  const { scrollTop, scrollHeight, clientHeight } = receiveArea.value;
+  // 如果滚动条不在底部（超过 100px 的容忍范围），关闭自动滚动
+  if (scrollHeight - scrollTop - clientHeight > 100) {
+    autoScroll.value = false;
+  }
+}
+
+// 恢复自动滚动（滚动到底部）
+function restoreAutoScroll() {
+  autoScroll.value = true;
+  nextTick(() => {
+    if (receiveArea.value) {
+      receiveArea.value.scrollTop = receiveArea.value.scrollHeight;
+    }
+  });
+}
+
 function startReading() {
   if (readTimer) return;
   readTimer = setInterval(async () => {
-    if (!serialStore.isConnected.value) return;
+    // 检查端口是否正在关闭或已断开
+    if (!serialStore.isConnected.value || serialStore.isPortClosing()) return;
     const data = await serialStore.readData();
     if (data) {
       serialStore.appendReceive(data);
@@ -77,6 +100,15 @@ function handleKeydown(e: KeyboardEvent) {
 
 function clearDisplay() {
   serialStore.clearReceive();
+  autoScroll.value = true;
+}
+
+function toggleTimestamp() {
+  serialStore.toggleTimestamp();
+}
+
+function toggleMode() {
+  serialStore.setWorkMode(isStandardMode.value ? 'terminal' : 'standard');
 }
 </script>
 
@@ -87,6 +119,7 @@ function clearDisplay() {
       ref="receiveArea"
       class="receive-area"
       :class="{ 'empty': !hasData }"
+      @scroll="handleScroll"
     >
       <pre v-if="hasData" v-text="serialStore.state.receiveBuffer"></pre>
       <div v-else class="empty-state">
@@ -117,47 +150,53 @@ function clearDisplay() {
 
     <!-- 控制栏 -->
     <div class="control-bar">
-      <label class="control-item">
-        <input
-          type="checkbox"
-          :checked="serialStore.state.timestampEnabled"
-          @change="serialStore.toggleTimestamp()"
-        />
-        <span>时间戳</span>
-      </label>
+      <!-- 时间戳按钮 -->
+      <button
+        class="ctrl-btn"
+        :class="{ active: serialStore.state.timestampEnabled }"
+        @click="toggleTimestamp"
+        title="时间戳"
+      >
+        <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+          <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
+        </svg>
+      </button>
 
-      <div class="control-item">
-        <span class="mode-label">模式:</span>
-        <select
-          :value="serialStore.state.workMode"
-          @change="serialStore.setWorkMode(($event.target as HTMLSelectElement).value as 'standard' | 'terminal')"
-        >
-          <option value="standard">标准发送</option>
-          <option value="terminal">终端模式</option>
-        </select>
-      </div>
+      <!-- 模式切换按钮 -->
+      <button
+        class="ctrl-btn mode-btn"
+        :class="{ active: isTerminalMode }"
+        @click="toggleMode"
+        title="终端模式"
+      >
+        >_
+      </button>
 
-      <label class="control-item">
-        <input
-          type="checkbox"
-          :checked="serialStore.state.autoScroll"
-          @change="serialStore.toggleAutoScroll()"
-        />
-        <span>自动滚动</span>
-      </label>
+      <!-- 显示模式选择 -->
+      <select
+        class="mode-select"
+        :value="serialStore.state.receiveMode"
+        @change="serialStore.setReceiveMode(($event.target as HTMLSelectElement).value as 'HEX' | 'ASCII')"
+      >
+        <option value="HEX">HEX</option>
+        <option value="ASCII">ASCII</option>
+      </select>
 
-      <div class="control-item">
-        <span class="mode-label">显示:</span>
-        <select
-          :value="serialStore.state.receiveMode"
-          @change="serialStore.setReceiveMode(($event.target as HTMLSelectElement).value as 'HEX' | 'ASCII')"
-        >
-          <option value="HEX">HEX</option>
-          <option value="ASCII">ASCII</option>
-        </select>
-      </div>
+      <!-- 清除按钮 -->
+      <button
+        class="ctrl-btn clear-btn"
+        @click="clearDisplay"
+        title="清除"
+      >
+        <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+          <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM8 9h8v10H8V9zm7.5-5l-1-1h-5l-1 1H5v2h14V4h-3.5z"/>
+        </svg>
+      </button>
 
-      <button class="clear-btn" @click="clearDisplay">清除</button>
+      <!-- 自动滚动提示（已内置，隐藏） -->
+      <span v-if="!autoScroll" class="auto-scroll-hint" @click="restoreAutoScroll">
+        滚动到底部
+      </span>
     </div>
   </div>
 </template>
@@ -257,47 +296,49 @@ function clearDisplay() {
 .control-bar {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 8px;
   padding: 8px 12px;
   border-top: 1px solid var(--border-color);
   background: var(--bg-tertiary);
   font-size: 13px;
 }
 
-.control-item {
+.ctrl-btn {
+  padding: 6px 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 4px;
-  cursor: pointer;
+  justify-content: center;
+  transition: all 0.2s;
 }
 
-.control-item input[type="checkbox"] {
-  cursor: pointer;
+.ctrl-btn:hover {
+  border-color: var(--accent-color);
 }
 
-.control-item select {
-  padding: 2px 4px;
+.ctrl-btn.active {
+  background: var(--accent-color);
+  border-color: var(--accent-color);
+  color: white;
+}
+
+.mode-select {
+  padding: 4px 8px;
   border: 1px solid var(--border-color);
   border-radius: 4px;
   background: var(--bg-primary);
   color: var(--text-primary);
+  font-size: 12px;
 }
 
-.mode-label {
-  color: var(--text-muted);
-}
-
-.clear-btn {
-  margin-left: auto;
-  padding: 4px 12px;
-  background: transparent;
-  color: var(--text-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.clear-btn:hover {
-  background: var(--bg-hover);
+.mode-btn {
+  font-family: monospace;
+  font-size: 14px;
+  font-weight: bold;
+  padding: 6px 10px;
 }
 </style>

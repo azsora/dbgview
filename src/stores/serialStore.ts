@@ -8,6 +8,7 @@ export interface SerialTabState {
   connectionStatus: ConnectionStatus;
   errorMessage?: string;
   receiveBuffer: string;
+  receiveLines: string[];  // 使用数组存储接收行，避免字符串拼接性能问题
   receiveMode: 'HEX' | 'ASCII';
   sendMode: 'HEX' | 'ASCII';
   autoScroll: boolean;
@@ -41,6 +42,7 @@ const defaultState: SerialTabState = {
   connectionStatus: 'disconnected',
   errorMessage: undefined,
   receiveBuffer: '',
+  receiveLines: [],
   receiveMode: 'HEX',
   sendMode: 'HEX',
   autoScroll: true,
@@ -52,6 +54,13 @@ const defaultState: SerialTabState = {
 };
 
 const state = reactive<SerialTabState>(defaultState);
+
+// 端口关闭标志，用于阻止关闭后继续读取
+let portClosingFlag = false;
+
+export function isPortClosing() {
+  return portClosingFlag;
+}
 
 // 自动保存（排除 receiveBuffer）
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
@@ -104,12 +113,16 @@ async function openPort(config: {
 }
 
 async function closePort() {
+  portClosingFlag = true;
   try {
     await invoke('serial_close');
     state.connectionStatus = 'disconnected';
     eventBus.emit('serial-disconnected', {});
   } catch (e) {
     state.errorMessage = String(e);
+  } finally {
+    // 延迟清除关闭标志，确保读取循环已停止
+    setTimeout(() => { portClosingFlag = false; }, 300);
   }
 }
 
@@ -152,11 +165,18 @@ async function readData(): Promise<string> {
 
 function appendReceive(data: string) {
   const timestamp = state.timestampEnabled ? `[${formatTime(new Date())}] ` : '';
-  state.receiveBuffer += timestamp + data + '\n';
+  state.receiveLines.push(timestamp + data);
+  // 限制最大行数，避免内存问题
+  if (state.receiveLines.length > 1000) {
+    state.receiveLines.shift();
+  }
+  // 更新 receiveBuffer 用于显示
+  state.receiveBuffer = state.receiveLines.join('\n');
 }
 
 function clearReceive() {
   state.receiveBuffer = '';
+  state.receiveLines = [];
 }
 
 function setReceiveMode(mode: 'HEX' | 'ASCII') {
@@ -212,6 +232,7 @@ export const serialStore = {
   state,
   isConnected,
   isConnecting,
+  isPortClosing,
   listPorts,
   openPort,
   closePort,
