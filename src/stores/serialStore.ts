@@ -14,6 +14,7 @@ export interface SerialTabState {
   timestampEnabled: boolean;
   workMode: 'standard' | 'terminal';
   sendHistory: string[];
+  portList: string[];
 }
 
 const STORAGE_KEY = 'serialState';
@@ -46,6 +47,7 @@ const defaultState: SerialTabState = {
   timestampEnabled: true,
   workMode: 'standard',
   sendHistory: [],
+  portList: [],
   ...loadState(),
 };
 
