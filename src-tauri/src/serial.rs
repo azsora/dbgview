@@ -1,5 +1,4 @@
 use serial::{SerialPort, SystemPort};
-use std::sync::{Arc, Mutex};
 use std::io::{Read, Write};
 
 // 串口配置结构
@@ -70,11 +69,16 @@ impl SerialManager {
     }
 
     pub fn list_ports() -> Vec<String> {
-        serial::available_ports()
-            .unwrap_or_default()
-            .iter()
-            .map(|p| p.port_name.clone())
-            .collect()
+        // 遍历所有可用端口
+        let mut ports = Vec::new();
+        for idx in 0..20 {
+            let port_name = format!("COM{}", idx + 1);
+            if let Ok(port) = serial::open(&port_name) {
+                drop(port);
+                ports.push(port_name);
+            }
+        }
+        ports
     }
 
     pub fn open(&mut self, config: SerialConfig) -> Result<(), String> {
