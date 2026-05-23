@@ -63,16 +63,16 @@ function isActive(flow: string) {
 .flow-buttons {
   display: flex;
   gap: 4px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .flow-btn {
-  padding: 4px 8px;
+  padding: 6px;
   border: 1px solid var(--border-color);
   border-radius: 4px;
   background: var(--bg-primary);
   color: var(--text-secondary);
-  font-size: 11px;
+  font-size: var(--font-size);
   cursor: pointer;
   transition: all 0.2s;
 }

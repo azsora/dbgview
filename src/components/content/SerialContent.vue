@@ -17,12 +17,12 @@ const isTerminalMode = computed(() => serialStore.state.workMode === 'terminal')
 const isConnected = computed(() => serialStore.isConnected.value);
 
 // 事件处理函数引用（用于移除监听）
-function onSerialData(payload: { data: number[] }) {
+function onSerialData(payload: number[]) {
   if (serialStore.isPortClosing()) return;
-  const bytes = payload.data;
+  const bytes = payload;
   if (bytes.length === 0) return;
   const str = bytesToString(bytes);
-  serialStore.appendReceive(str);
+  serialStore.appendReceive(str, bytes);
 }
 
 onMounted(() => {
@@ -86,6 +86,7 @@ function handleKeydown(e: KeyboardEvent) {
 
 function clearDisplay() {
   serialStore.clearReceive();
+  serialStore.resetCounters();
   autoScroll.value = true;
 }
 
@@ -114,24 +115,6 @@ function toggleMode() {
         </svg>
         <span>无数据</span>
       </div>
-    </div>
-
-    <!-- 发送区（标准模式） -->
-    <div v-if="isStandardMode" class="send-area">
-      <textarea
-        v-model="sendInput"
-        class="send-input"
-        placeholder="输入发送内容..."
-        rows="1"
-        @keydown="handleKeydown"
-      ></textarea>
-      <button
-        class="send-btn"
-        :disabled="!isConnected"
-        @click="handleSend"
-      >
-        发送
-      </button>
     </div>
 
     <!-- 控制栏 -->
@@ -183,6 +166,24 @@ function toggleMode() {
       <span v-if="!autoScroll" class="auto-scroll-hint" @click="restoreAutoScroll">
         滚动到底部
       </span>
+    </div>
+
+    <!-- 发送区（标准模式） -->
+    <div v-if="isStandardMode" class="send-area">
+      <textarea
+        v-model="sendInput"
+        class="send-input"
+        placeholder="输入发送内容..."
+        rows="1"
+        @keydown="handleKeydown"
+      ></textarea>
+      <button
+        class="send-btn"
+        :disabled="!isConnected"
+        @click="handleSend"
+      >
+        发送
+      </button>
     </div>
   </div>
 </template>

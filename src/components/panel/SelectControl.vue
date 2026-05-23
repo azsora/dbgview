@@ -8,6 +8,7 @@ defineProps<{
 const emit = defineEmits<{
   (e: 'update', value: string | number): void;
   (e: 'focus'): void;
+  (e: 'dblclick'): void;
 }>();
 
 function handleChange(e: Event) {
@@ -16,6 +17,10 @@ function handleChange(e: Event) {
 
 function handleFocus() {
   emit('focus');
+}
+
+function handleDblClick() {
+  emit('dblclick');
 }
 </script>
 
@@ -27,6 +32,7 @@ function handleFocus() {
       :value="value"
       @change="handleChange"
       @focus="handleFocus"
+      @dblclick="handleDblClick"
     >
       <option v-for="opt in options" :key="opt.value" :value="opt.value">
         {{ opt.label }}
@@ -42,7 +48,7 @@ function handleFocus() {
 
 .control-label {
   display: block;
-  font-size: 12px;
+  font-size: var(--font-size);
   color: var(--text-primary);
   margin-bottom: 4px;
 }
@@ -54,7 +60,7 @@ function handleFocus() {
   border-radius: 4px;
   background: var(--bg-primary);
   color: var(--text-primary);
-  font-size: 13px;
+  font-size: var(--font-size);
 }
 
 .control-input:focus {

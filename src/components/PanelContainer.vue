@@ -185,7 +185,7 @@ onUnmounted(() => {
 
 <style scoped>
 .panel-container {
-  width: 220px;
+  width: 240px;
   background: var(--bg-tertiary);
   border-right: 1px solid var(--border-color);
   padding: 5px;

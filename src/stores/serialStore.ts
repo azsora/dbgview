@@ -16,6 +16,9 @@ export interface SerialTabState {
   workMode: 'standard' | 'terminal';
   sendHistory: string[];
   portList: string[];
+  txBytes: number;     // 发送字节总数
+  rxBytes: number;     // 接收字节总数
+  currentRxBytes: number;  // 当前帧字节数
 }
 
 const STORAGE_KEY = 'serialState';
@@ -50,6 +53,9 @@ const defaultState: SerialTabState = {
   workMode: 'standard',
   sendHistory: [],
   portList: [],
+  txBytes: 0,
+  rxBytes: 0,
+  currentRxBytes: 0,
   ...loadState(),
 };
 
@@ -139,6 +145,9 @@ async function sendData(data: string): Promise<boolean> {
 
     await invoke('serial_write', { data: bytes });
 
+    // 累加发送字节数
+    state.txBytes += bytes.length;
+
     // 添加到历史
     if (state.sendHistory.length >= 10) {
       state.sendHistory.shift();
@@ -163,7 +172,7 @@ async function readData(): Promise<string> {
   }
 }
 
-function appendReceive(data: string) {
+function appendReceive(data: string, rxData?: number[]) {
   const timestamp = state.timestampEnabled ? `[${formatTime(new Date())}] ` : '';
   state.receiveLines.push(timestamp + data);
   // 限制最大行数，避免内存问题
@@ -172,11 +181,32 @@ function appendReceive(data: string) {
   }
   // 更新 receiveBuffer 用于显示
   state.receiveBuffer = state.receiveLines.join('\n');
+  // 累加接收字节数
+  if (rxData) {
+    state.currentRxBytes = rxData.length;
+    state.rxBytes += rxData.length;
+  }
 }
 
 function clearReceive() {
   state.receiveBuffer = '';
   state.receiveLines = [];
+  state.currentRxBytes = 0;
+}
+
+function resetCounters() {
+  state.txBytes = 0;
+  state.rxBytes = 0;
+  state.currentRxBytes = 0;
+}
+
+function resetTxCounter() {
+  state.txBytes = 0;
+}
+
+function resetRxCounter() {
+  state.rxBytes = 0;
+  state.currentRxBytes = 0;
 }
 
 function setReceiveMode(mode: 'HEX' | 'ASCII') {
@@ -245,4 +275,7 @@ export const serialStore = {
   setWorkMode,
   toggleTimestamp,
   toggleAutoScroll,
+  resetCounters,
+  resetTxCounter,
+  resetRxCounter,
 };

@@ -1,44 +1,51 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
-import { eventBus } from '../eventBus';
+import { computed } from 'vue';
+import { tabStore } from '../stores/tabStore';
+import { serialStore } from '../stores/serialStore';
 
-const connectionStatus = ref('未连接');
-const operationMode = ref('就绪');
-const progress = ref('');
-
-let interval: number | null = null;
-
-onMounted(() => {
-  // 模拟状态更新（实际项目中替换为真实数据源）
-  interval = window.setInterval(() => {
-    // 这里可以定期更新状态
-  }, 5000);
+// 当前端口信息
+const portInfo = computed(() => {
+  const config = tabStore.activeTab.value?.config;
+  if (!config?.port) return '未连接';
+  const baudRate = config.baudRate || '-';
+  return `${config.port}@${baudRate}`;
 });
 
-onUnmounted(() => {
-  if (interval) {
-    clearInterval(interval);
-  }
+// Tx 字节数
+const txInfo = computed(() => {
+  return `Tx:${serialStore.state.txBytes}`;
 });
 
-// 监听事件更新状态
-eventBus.on('config-changed', ({ config }) => {
-  if (config.enabled !== undefined) {
-    connectionStatus.value = config.enabled ? '已连接' : '未连接';
-  }
+// Rx 字节数 (总接收字节数-上一次接收字节数)
+const rxInfo = computed(() => {
+  const { currentRxBytes, rxBytes } = serialStore.state;
+  return `Rx:${rxBytes}-${currentRxBytes}`;
 });
+
+// 连接状态
+const isConnected = computed(() => serialStore.isConnected.value);
+
+// 点击清除 Tx 计数
+function resetTx() {
+  serialStore.resetTxCounter();
+}
+
+// 点击清除 Rx 计数
+function resetRx() {
+  serialStore.resetRxCounter();
+}
 </script>
 
 <template>
   <div class="status-bar">
     <span class="status-item">
-      <span class="status-dot" :class="{ connected: connectionStatus === '已连接' }"></span>
-      {{ connectionStatus }}
+      <span class="status-dot" :class="{ connected: isConnected }"></span>
+      {{ portInfo }}
     </span>
     <span class="status-divider">|</span>
-    <span class="status-item">操作模式: {{ operationMode }}</span>
+    <span class="status-item clickable" @click="resetTx">{{ txInfo }}</span>
     <span class="status-divider">|</span>
-    <span class="status-item">{{ progress || '就绪' }}</span>
+    <span class="status-item clickable" @click="resetRx" :title="`接收总数-上一次接收`">{{ rxInfo }}</span>
   </div>
 </template>
 
@@ -72,5 +79,16 @@ eventBus.on('config-changed', ({ config }) => {
 
 .status-divider {
   opacity: 0.5;
+}
+
+.status-item.clickable {
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 3px;
+  transition: background 0.2s;
+}
+
+.status-item.clickable:hover {
+  background: rgba(255, 255, 255, 0.1);
 }
 </style>

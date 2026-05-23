@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, watch } from 'vue';
+import { open } from '@tauri-apps/plugin-dialog';
 import { tabStore } from '../../stores/tabStore';
 import { serialStore } from '../../stores/serialStore';
 import SelectControl from './SelectControl.vue';
@@ -112,6 +113,21 @@ async function handleToggle() {
   }
 }
 
+// 选择脚本文件
+async function selectScriptFile(type: 'receive' | 'send') {
+  const selected = await open({
+    multiple: false,
+    filters: [{
+      name: 'Script',
+      extensions: ['lua', 'lua5', 'py', 'python', 'js', 'ts', 'sh', 'bash']
+    }]
+  });
+  if (selected) {
+    const key = type === 'receive' ? 'receiveScript' : 'sendScript';
+    updateConfig(key, selected);
+  }
+}
+
 const buttonText = computed(() => {
   if (isConnected.value) return '关闭';
   if (isConnecting.value) return '打开中...';
@@ -196,6 +212,37 @@ const buttonClass = computed(() => {
         {{ buttonText }}
       </button>
     </div>
+
+    <!-- 扩展配置 -->
+    <div class="expand-section">
+      <div class="section-title">扩展配置</div>
+
+      <!-- 接收设置 -->
+      <div class="expand-row">
+        <label class="expand-label">接收脚本</label>
+        <input
+          type="text"
+          class="script-input"
+          :value="activeConfig.receiveScript || ''"
+          placeholder="选择脚本文件..."
+          readonly
+          @click="selectScriptFile('receive')"
+        />
+      </div>
+
+      <!-- 发送设置 -->
+      <div class="expand-row">
+        <label class="expand-label">发送脚本</label>
+        <input
+          type="text"
+          class="script-input"
+          :value="activeConfig.sendScript || ''"
+          placeholder="选择脚本文件..."
+          readonly
+          @click="selectScriptFile('send')"
+        />
+      </div>
+    </div>
   </div>
 </template>
 
@@ -251,5 +298,56 @@ const buttonClass = computed(() => {
 
 .serial-panel :deep(.control-input) {
   flex: 1;
+}
+
+/* 扩展配置区域 */
+.expand-section {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-color);
+}
+
+.section-title {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.expand-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.expand-label {
+  min-width: 56px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-right: 8px;
+}
+
+.script-input {
+  flex: 1;
+  min-height: 24px;
+  padding: 4px 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.script-input:hover {
+  border-color: var(--accent-color);
+}
+
+.script-input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+}
+
+.script-input::placeholder {
+  color: var(--text-muted);
 }
 </style>
