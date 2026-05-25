@@ -56,8 +56,9 @@ const connectionType = computed(() => activeConfig.value.connectionType || 'seri
 }
 
 .placeholder-icon {
-  font-size: 48px;
-  opacity: 0.5;
+  width: 48px;
+  height: 48px;
+  opacity: 0.3;
 }
 
 .placeholder-text {
