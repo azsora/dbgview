@@ -50,11 +50,15 @@ const configItems = computed(() => {
   return tabType?.configItems ?? [];
 });
 
-// 是否为串口类型
-const isSerialTab = computed(() => tabStore.activeTab.value?.type === 'serial');
+// 是否为串口助手类型
+const isSerialTab = computed(() => tabStore.activeTab.value?.type === 'serial-assistant');
 
 // 是否为调试助手类型
-const isDebuggerTab = computed(() => tabStore.activeTab.value?.type === 'debugger');
+const isDebuggerTab = computed(() => tabStore.activeTab.value?.type === 'debugger-assistant');
+
+// TODO: 后续添加 BLE/TCP 面板时启用
+// const isBleTab = computed(() => tabStore.activeTab.value?.type === 'ble-assistant');
+// const isTcpTab = computed(() => tabStore.activeTab.value?.type === 'tcp-assistant');
 
 // 缓存 renderControl 结果，避免重复计算
 const renderedControls = computed(() => {

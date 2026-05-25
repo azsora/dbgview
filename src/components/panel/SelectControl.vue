@@ -15,10 +15,6 @@ function handleChange(e: Event) {
   emit('update', (e.target as HTMLSelectElement).value);
 }
 
-function handleFocus() {
-  emit('focus');
-}
-
 function handleDblClick() {
   emit('dblclick');
 }
@@ -31,7 +27,7 @@ function handleDblClick() {
       class="control-input"
       :value="value"
       @change="handleChange"
-      @focus="handleFocus"
+      @mousedown="emit('focus')"
       @dblclick="handleDblClick"
     >
       <option v-for="opt in options" :key="opt.value" :value="opt.value">
@@ -61,10 +57,19 @@ function handleDblClick() {
   background: var(--bg-primary);
   color: var(--text-primary);
   font-size: var(--font-size);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .control-input:focus {
   outline: none;
   border-color: var(--accent-color);
+}
+
+.control-input option {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>

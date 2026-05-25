@@ -11,22 +11,24 @@ const activeTab = computed(() => tabStore.activeTab.value);
 const contentComponent = computed(() => {
   if (!activeTab.value) return null;
 
-  if (activeTab.value.type === 'serial') {
-    return SerialContent;
+  switch (activeTab.value.type) {
+    case 'serial-assistant':
+      return SerialContent;
+    case 'debugger-assistant':
+      return DebuggerContent;
+    case 'ble-assistant':
+    case 'tcp-assistant':
+      return null;  // 占位，暂用默认 placeholder
+    default:
+      return null;
   }
-
-  if (activeTab.value.type === 'debugger') {
-    return DebuggerContent;
-  }
-
-  return null;
 });
 
-// 是否为 serial 类型（需要填满内容区）
-const isSerialTab = computed(() => activeTab.value?.type === 'serial');
+// 是否为 serial-assistant 类型（需要填满内容区）
+const isSerialTab = computed(() => activeTab.value?.type === 'serial-assistant');
 
 // 是否为调试助手类型（需要填满内容区）
-const isDebuggerTab = computed(() => activeTab.value?.type === 'debugger');
+const isDebuggerTab = computed(() => activeTab.value?.type === 'debugger-assistant');
 </script>
 
 <template>

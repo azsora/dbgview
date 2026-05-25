@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import type { Tab } from '../types/tab';
 import { eventBus } from '../eventBus';
+import { getTabType } from '../registry/tabTypeRegistry';
 
 const props = defineProps<{
   tab: Tab;
@@ -10,6 +12,12 @@ const emit = defineEmits<{
   (e: 'click'): void;
   (e: 'close'): void;
 }>();
+
+// 获取 tab 类型定义中的图标
+const tabIcon = computed(() => {
+  const typeDef = getTabType(props.tab.type);
+  return typeDef?.icon ?? '';
+});
 
 function handleDragStart(e: DragEvent) {
   if (e.dataTransfer) {
@@ -35,6 +43,7 @@ function handleDragEnd(_e: DragEvent) {
     @dragstart="handleDragStart"
     @dragend="handleDragEnd"
   >
+    <span v-if="tabIcon" class="tab-icon">{{ tabIcon }}</span>
     <span class="tab-title">{{ tab.title }}</span>
     <button
       class="tab-close"
@@ -81,8 +90,13 @@ function handleDragEnd(_e: DragEvent) {
   cursor: grabbing;
 }
 
+.tab-icon {
+  margin-right: 6px;
+  font-size: 14px;
+}
+
 .tab-title {
-  max-width: 150px;
+  max-width: 130px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

@@ -86,6 +86,7 @@ npm run tauri build
 - **自动隐藏**：未钉住时，鼠标离开 500ms 后自动收起
 - **边缘触发**：鼠标靠近右边缘 10px 时自动滑出
 - **钉住效果**：钉住后面板保持显示
+- 注意：`renderControl(item)` 在模板中被调用 4 次（v-if、:is、v-bind、v-on），后续考虑用 computed 缓存优化
 
 ### 状态栏（StatusBar.vue）
 - **显示条件**：有激活标签页时显示，空页时隐藏
@@ -141,7 +142,8 @@ npm run tauri build
 - **端口关闭标志**：`isPortClosing()` 防止关闭后继续读取
 - **消息存储**：`receiveLines` 以 `{ timestamp, data: number[], isTx }[]` 存储原始字节，按 `receiveMode`/`sendMode` 格式化追加到 `receiveBuffer`
 - **HEX 切换**：HEX↑/HEX↓ 按钮只影响新接收/发送的消息格式，旧消息保持不变
-- **标签页关闭**：关闭串口标签页时自动断开端口并清除接收区数据
+- **标签页关闭**：关闭调试助手标签页时自动断开端口并清除接收区数据（debugger 类型标签页）
+- 关闭标签页时，`tab-closed` 事件会携带 `config`，用于新标签页恢复配置
 
 ### 错误处理
 - **端口打开失败**：显示 Toast 弹窗，3秒后自动消失，带渐隐效果

@@ -6,7 +6,8 @@ const emit = defineEmits<{
   (e: 'close'): void;
 }>();
 
-const tabTypes = getAllTabTypes().filter(t => t.type !== 'serial');
+// 获取所有标签类型（包括 serial-assistant）
+const tabTypes = getAllTabTypes();
 
 function handleSelect(type: string) {
   emit('select', type);
@@ -28,7 +29,7 @@ function handleSelect(type: string) {
             class="type-card"
             @click="handleSelect(tabType.type)"
           >
-            <div class="type-icon">📦</div>
+            <div class="type-icon">{{ tabType.icon }}</div>
             <div class="type-name">{{ tabType.title }}</div>
           </div>
         </div>

@@ -90,9 +90,9 @@ onMounted(() => {
   eventBus.on('tab-created', () => updatePanelStateFromActiveTab());
   eventBus.on('tab-closed', ({ tabType, config }) => {
     updatePanelStateFromActiveTab();
-    // 关闭标签页时，如果是调试助手则断开端口并清除接收区
+    // 关闭标签页时，如果是串口助手则断开端口并清除接收区
     // 同时保存配置，用于下次创建同类型标签页时恢复
-    if (tabType === 'debugger') {
+    if (tabType === 'serial-assistant') {
       if (serialStore.isConnected.value) {
         serialStore.closePort();
       }
@@ -206,9 +206,9 @@ function handleSelectTabType(type: string) {
   }
 
   // 创建 Tab 配置
-  // 如果是调试助手类型且存在上次关闭的配置，则使用该配置；否则使用类型定义的默认配置
+  // 如果是串口助手类型且存在上次关闭的配置，则使用该配置；否则使用类型定义的默认配置
   let tabConfig: Record<string, any> = {};
-  if (type === 'debugger' && lastClosedTabConfig) {
+  if (type === 'serial-assistant' && lastClosedTabConfig) {
     tabConfig = { ...lastClosedTabConfig };
   } else {
     tabType.configItems.forEach(item => {

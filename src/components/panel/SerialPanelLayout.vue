@@ -276,9 +276,9 @@ const buttonClass = computed(() => {
 }
 
 .serial-panel :deep(.control-label) {
-  min-width: 48px;
+  min-width: 50px;
   margin-bottom: 0;
-  margin-right: 8px;
+  margin-right: 5px;
 }
 
 .serial-panel :deep(.control-input) {

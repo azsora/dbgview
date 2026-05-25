@@ -28,11 +28,12 @@ export interface TabState {
 export interface TabTypeDefinition {
   type: string;
   title: string;
+  icon: string;
   configItems: TabConfigItem[];
-  panelComponent: string;  // 组件名称
-  contentComponent: string;  // 组件名称
-  leftPanelPinned?: boolean;   // 左面板默认钉住状态
-  rightPanelPinned?: boolean; // 右面板默认钉住状态
+  panelComponent: string;
+  contentComponent: string;
+  leftPanelPinned?: boolean;
+  rightPanelPinned?: boolean;
 }
 
 /** 事件总线类型 - mitt 适配格式 */
@@ -51,4 +52,7 @@ export type TabEvent = {
   'serial-error': { error: string };
   'serial-disconnected': {};
   'serial-data': number[];
+  'debugger-connected': { debuggerId: string };
+  'debugger-error': { error: string };
+  'debugger-disconnected': {};
 };

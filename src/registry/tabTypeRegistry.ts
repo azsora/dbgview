@@ -142,42 +142,63 @@ export const tcpUdpConfigTemplates = {
 
 // 内置 Tab 类型定义
 const builtinTypes: TabTypeDefinition[] = [
+  // 串口助手
   {
-    type: 'debugger',
-    title: '调试助手',
+    type: 'serial-assistant',
+    title: '串口助手',
+    icon: '📎',
     configItems: [
-      // 连接类型下拉
-      {
-        key: 'connectionType',
-        label: '连接类型',
-        type: 'select' as const,
-        options: [
-          { label: '串口', value: 'serial' },
-          { label: '调试器', value: 'debugger' },
-          { label: 'BLE', value: 'ble' },
-          { label: 'TCP/UDP', value: 'tcp-udp' },
-        ],
-        defaultValue: 'serial',
-      },
-      // 串口配置（connectionType=serial 时使用）
       serialConfigTemplates.port,
       serialConfigTemplates.baudRate,
       serialConfigTemplates.dataBits,
       serialConfigTemplates.stopBits,
       serialConfigTemplates.parity,
       serialConfigTemplates.flowControl,
-      // 调试器配置（connectionType=debugger 时使用）
+    ],
+    panelComponent: 'SerialPanel',
+    contentComponent: 'SerialContent',
+    leftPanelPinned: true,
+    rightPanelPinned: false,
+  },
+  // 调试器助手
+  {
+    type: 'debugger-assistant',
+    title: '调试器助手',
+    icon: '🔧',
+    configItems: [
       configItemTemplates.chipModel,
       configItemTemplates.connectionAddress,
       configItemTemplates.enableSwitch,
       configItemTemplates.sampleThreshold,
-      // TCP/UDP 配置（connectionType=tcp-udp 时使用）
+    ],
+    panelComponent: 'DebuggerPanel',
+    contentComponent: 'DebuggerContent',
+    leftPanelPinned: true,
+    rightPanelPinned: false,
+  },
+  // BLE 助手
+  {
+    type: 'ble-assistant',
+    title: 'BLE助手',
+    icon: '📱',
+    configItems: [],
+    panelComponent: 'BlePanel',
+    contentComponent: 'BleContent',
+    leftPanelPinned: true,
+    rightPanelPinned: false,
+  },
+  // TCP 助手
+  {
+    type: 'tcp-assistant',
+    title: 'TCP助手',
+    icon: '🌐',
+    configItems: [
       tcpUdpConfigTemplates.ip,
       tcpUdpConfigTemplates.port,
       tcpUdpConfigTemplates.protocol,
     ],
-    panelComponent: 'DebuggerPanel',
-    contentComponent: 'DebuggerContent',
+    panelComponent: 'TcpPanel',
+    contentComponent: 'TcpContent',
     leftPanelPinned: true,
     rightPanelPinned: false,
   },

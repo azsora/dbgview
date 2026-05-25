@@ -7,7 +7,7 @@ fn greet(name: &str) -> String {
 mod commands;
 mod serial;
 
-use commands::{SerialState, serial_list_ports, serial_open, serial_close, serial_write, serial_is_open};
+use commands::{DebuggerState, DebuggerManager, SerialState, serial_list_ports, serial_open, serial_close, serial_write, serial_is_open, debugger_list_probes, debugger_connect, debugger_disconnect, debugger_is_connected};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -22,6 +22,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .manage(SerialState(std::sync::Mutex::new(serial::SerialManager::new())))
+        .manage(DebuggerState(std::sync::Mutex::new(DebuggerManager::new())))
         .invoke_handler(tauri::generate_handler![
             greet,
             serial_list_ports,
@@ -29,6 +30,10 @@ pub fn run() {
             serial_close,
             serial_write,
             serial_is_open,
+            debugger_list_probes,
+            debugger_connect,
+            debugger_disconnect,
+            debugger_is_connected,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

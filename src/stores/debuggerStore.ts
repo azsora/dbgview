@@ -1,77 +1,100 @@
-import { reactive } from 'vue';
+import { reactive, computed } from 'vue';
+import { invoke } from '@tauri-apps/api/core';
+import { eventBus } from '../eventBus';
 
-export type ConnectionType = 'serial' | 'debugger' | 'ble' | 'tcp-udp';
-
-export interface DebuggerTabState {
-  connectionType: ConnectionType;
-  serialConfig: {
-    port: string;
-    baudRate: number;
-    dataBits: number;
-    stopBits: number;
-    parity: string;
-    flowControl: string;
-  };
-  debuggerConfig: {
-    chipModel: string;
-    connectionAddress: string;
-    enabled: boolean;
-    sampleThreshold: number;
-  };
-  bleConfig: Record<string, never>;
-  tcpUdpConfig: {
-    ip: string;
-    port: string;
-    protocol: 'TCP' | 'UDP';
-  };
+export interface DebuggerInfo {
+  id: string;
+  name: string;
+  target: string;
+  chipModel?: string;
 }
 
-const defaultState: DebuggerTabState = {
-  connectionType: 'serial',
-  serialConfig: {
-    port: '',
-    baudRate: 115200,
-    dataBits: 8,
-    stopBits: 1,
-    parity: 'None',
-    flowControl: 'None',
-  },
-  debuggerConfig: {
-    chipModel: 'stm32f103',
-    connectionAddress: '192.168.1.100',
-    enabled: true,
-    sampleThreshold: 50,
-  },
-  bleConfig: {},
-  tcpUdpConfig: {
-    ip: '192.168.1.100',
-    port: '8080',
-    protocol: 'TCP',
-  },
-};
+export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'error';
 
-const state = reactive<DebuggerTabState>(defaultState);
-
-export function setConnectionType(type: ConnectionType) {
-  state.connectionType = type;
+export interface DebuggerState {
+  connectionStatus: ConnectionStatus;
+  errorMessage?: string;
+  debuggerList: DebuggerInfo[];
+  sessionActive: boolean;
 }
 
-export function updateSerialConfig(config: Partial<DebuggerTabState['serialConfig']>) {
-  Object.assign(state.serialConfig, config);
+// 调试器状态
+const state = reactive<DebuggerState>({
+  connectionStatus: 'disconnected',
+  errorMessage: undefined,
+  debuggerList: [],
+  sessionActive: false,
+});
+
+// 计算属性
+const isConnected = computed(() => state.connectionStatus === 'connected');
+const isConnecting = computed(() => state.connectionStatus === 'connecting');
+
+// 使用 probe-rs 扫描调试器
+async function listDebuggers(): Promise<DebuggerInfo[]> {
+  try {
+    const list = await invoke<DebuggerInfo[]>('debugger_list_probes');
+    state.debuggerList = list;
+    return list;
+  } catch (e) {
+    console.error('Failed to list debuggers:', e);
+    state.debuggerList = [];
+    return [];
+  }
 }
 
-export function updateDebuggerConfig(config: Partial<DebuggerTabState['debuggerConfig']>) {
-  Object.assign(state.debuggerConfig, config);
+// 连接到调试器
+async function connect(config: {
+  debuggerId: string;
+  chipModel?: string;
+  enabled?: boolean;
+  sampleThreshold?: number;
+}): Promise<void> {
+  state.connectionStatus = 'connecting';
+  state.errorMessage = undefined;
+
+  try {
+    await invoke('debugger_connect', {
+      debuggerId: config.debuggerId,
+      chipModel: config.chipModel,
+    });
+    state.connectionStatus = 'connected';
+    state.sessionActive = config.enabled ?? false;
+    eventBus.emit('debugger-connected', { debuggerId: config.debuggerId });
+  } catch (e) {
+    state.connectionStatus = 'error';
+    state.errorMessage = String(e);
+    eventBus.emit('debugger-error', { error: String(e) });
+  }
 }
 
-export function updateTcpUdpConfig(config: Partial<DebuggerTabState['tcpUdpConfig']>) {
-  Object.assign(state.tcpUdpConfig, config);
+// 断开调试器连接
+async function disconnect(): Promise<void> {
+  try {
+    await invoke('debugger_disconnect');
+    state.connectionStatus = 'disconnected';
+    state.sessionActive = false;
+    eventBus.emit('debugger-disconnected', {});
+  } catch (e) {
+    state.errorMessage = String(e);
+  }
+}
+
+// 读取调试数据
+async function readDebugData(): Promise<number[]> {
+  try {
+    return await invoke<number[]>('debugger_read');
+  } catch {
+    return [];
+  }
 }
 
 export const debuggerStore = {
   state,
-  setConnectionType,
-  updateSerialConfig,
-  updateDebuggerConfig,
-  updateTcpUdpConfig,
+  isConnected,
+  isConnecting,
+  listDebuggers,
+  connect,
+  disconnect,
+  readDebugData,
 };
