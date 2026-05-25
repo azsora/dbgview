@@ -13,7 +13,17 @@ function loadState(): TabState {
   try {
     const saved = sessionStorage.getItem(STORAGE_KEY);
     if (saved) {
-      return JSON.parse(saved);
+      const parsed = JSON.parse(saved);
+      // 恢复缺失的 connectionType 和 port 字段（旧数据格式不包含这些字段）
+      parsed.tabs = parsed.tabs.map((tab: any) => ({
+        ...tab,
+        config: {
+          connectionType: 'serial',  // 默认连接类型
+          port: '',                  // 默认端口
+          ...tab.config,
+        },
+      }));
+      return parsed;
     }
   } catch (e) {
     console.warn('Failed to load tab state:', e);
@@ -32,11 +42,9 @@ function saveState(state: TabState) {
 // 创建单例
 const state = reactive<TabState>(loadState());
 
-// 过滤掉扩展配置字段（排除 connectionType 和 port，它们需要持久化）
+// 过滤掉扩展配置字段（只排除 Script 结尾的字段）
 const filterConfig = (config: Record<string, any>) => Object.fromEntries(
-  Object.entries(config).filter(([key]) =>
-    !key.endsWith('Script') && key !== 'connectionType' && key !== 'port'
-  )
+  Object.entries(config).filter(([key]) => !key.endsWith('Script'))
 );
 
 // 监听变化自动保存（排除扩展配置）
@@ -114,7 +122,7 @@ function closeTab(tabId: string) {
     }
   }
 
-  eventBus.emit('tab-closed', { tabId, tabType });
+  eventBus.emit('tab-closed', { tabId, tabType, config: closingTab.config });
 }
 
 function activateTab(tabId: string) {

@@ -52,10 +52,10 @@ function handleDrop(event: DragEvent) {
         @click="handleTabClick(tab.id)"
         @close="handleTabClose(tab.id)"
       />
+      <button class="new-tab-btn" @click="emit('newTab')" title="新建标签">
+        +
+      </button>
     </div>
-    <button class="new-tab-btn" @click="emit('newTab')" title="新建标签">
-      +
-    </button>
   </div>
 </template>
 
@@ -78,7 +78,7 @@ function handleDrop(event: DragEvent) {
 
 .new-tab-btn {
   padding: 6px 14px;
-  margin: 4px 8px;
+  margin: 0;
   background: var(--accent-color);
   color: #fff;
   border: none;
@@ -86,6 +86,7 @@ function handleDrop(event: DragEvent) {
   font-size: 14px;
   cursor: pointer;
   transition: background 0.15s;
+  flex-shrink: 0;
 }
 
 .new-tab-btn:hover {

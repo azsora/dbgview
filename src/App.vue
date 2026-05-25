@@ -23,6 +23,7 @@ const rightPanelVisible = ref(false);
 let draggedTabId: string | null = null;
 let leftEdgeTimer: ReturnType<typeof setTimeout> | null = null;
 let rightEdgeTimer: ReturnType<typeof setTimeout> | null = null;
+let lastClosedTabConfig: Record<string, any> | null = null;  // 保存最后关闭的调试助手标签页配置
 
 // 是否显示状态栏（有激活标签页时显示）
 const showStatusBar = computed(() => !!tabStore.activeTab.value);
@@ -87,14 +88,16 @@ onMounted(() => {
 
   // 监听标签页变化
   eventBus.on('tab-created', () => updatePanelStateFromActiveTab());
-  eventBus.on('tab-closed', ({ tabType }) => {
+  eventBus.on('tab-closed', ({ tabType, config }) => {
     updatePanelStateFromActiveTab();
-    // 关闭标签页时，如果是串口标签页则断开端口并清除接收区
-    if (tabType === 'serial') {
+    // 关闭标签页时，如果是调试助手则断开端口并清除接收区
+    // 同时保存配置，用于下次创建同类型标签页时恢复
+    if (tabType === 'debugger') {
       if (serialStore.isConnected.value) {
         serialStore.closePort();
       }
       serialStore.clearReceive();
+      lastClosedTabConfig = config;
     }
   });
   eventBus.on('tab-activated', () => updatePanelStateFromActiveTab());
@@ -202,13 +205,18 @@ function handleSelectTabType(type: string) {
     title = `${tabType.title}-${existingTabs.length + 1}`;
   }
 
-  // 创建 Tab（使用类型定义的默认配置）
-  const defaultConfig: Record<string, any> = {};
-  tabType.configItems.forEach(item => {
-    defaultConfig[item.key] = item.defaultValue;
-  });
+  // 创建 Tab 配置
+  // 如果是调试助手类型且存在上次关闭的配置，则使用该配置；否则使用类型定义的默认配置
+  let tabConfig: Record<string, any> = {};
+  if (type === 'debugger' && lastClosedTabConfig) {
+    tabConfig = { ...lastClosedTabConfig };
+  } else {
+    tabType.configItems.forEach(item => {
+      tabConfig[item.key] = item.defaultValue;
+    });
+  }
 
-  tabStore.createTab(type, title, defaultConfig);
+  tabStore.createTab(type, title, tabConfig);
 }
 
 function handleCloseSelector() {

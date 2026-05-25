@@ -38,7 +38,7 @@ export interface TabTypeDefinition {
 /** 事件总线类型 - mitt 适配格式 */
 export type TabEvent = {
   'tab-created': { tabId: string; tabType: string };
-  'tab-closed': { tabId: string; tabType: string };
+  'tab-closed': { tabId: string; tabType: string; config: Record<string, any> };
   'tab-activated': { tabId: string };
   'tab-drag-started': { tabId: string };
   'tab-drag-ended': {};
