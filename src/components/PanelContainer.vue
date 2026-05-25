@@ -9,6 +9,7 @@ import InputControl from './panel/InputControl.vue';
 import SwitchControl from './panel/SwitchControl.vue';
 import SliderControl from './panel/SliderControl.vue';
 import SerialPanelLayout from './panel/SerialPanelLayout.vue';
+import DebuggerPanel from './panel/DebuggerPanel.vue';
 
 const props = defineProps<{
   visible?: boolean;
@@ -51,6 +52,9 @@ const configItems = computed(() => {
 
 // 是否为串口类型
 const isSerialTab = computed(() => tabStore.activeTab.value?.type === 'serial');
+
+// 是否为调试助手类型
+const isDebuggerTab = computed(() => tabStore.activeTab.value?.type === 'debugger');
 
 // 缓存 renderControl 结果，避免重复计算
 const renderedControls = computed(() => {
@@ -170,6 +174,8 @@ onUnmounted(() => {
     <div class="panel-content">
       <!-- 串口类型使用专用布局 -->
       <SerialPanelLayout v-if="isSerialTab" />
+      <!-- 调试助手类型使用专用布局 -->
+      <DebuggerPanel v-else-if="isDebuggerTab" />
       <!-- 其他类型使用通用 configItems 渲染 -->
       <template v-else v-for="rc in renderedControls" :key="rc.key">
         <component
