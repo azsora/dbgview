@@ -32,14 +32,38 @@ function saveState(state: TabState) {
 // 创建单例
 const state = reactive<TabState>(loadState());
 
-// 监听变化自动保存
+// 监听变化自动保存（排除扩展配置）
 watch(
   () => ({ tabs: state.tabs, activeTabId: state.activeTabId }),
   (newState) => {
-    saveState(newState);
+    // 过滤掉扩展配置字段
+    const filteredState = {
+      ...newState,
+      tabs: newState.tabs.map(tab => ({
+        ...tab,
+        config: Object.fromEntries(
+          Object.entries(tab.config).filter(([key]) => !key.endsWith('Script'))
+        )
+      }))
+    };
+    saveState(filteredState);
   },
   { deep: true }
 );
+
+// 页面卸载前保存状态（排除扩展配置）
+window.addEventListener('beforeunload', () => {
+  const filteredState = {
+    tabs: state.tabs.map(tab => ({
+      ...tab,
+      config: Object.fromEntries(
+        Object.entries(tab.config).filter(([key]) => !key.endsWith('Script'))
+      )
+    })),
+    activeTabId: state.activeTabId
+  };
+  saveState(filteredState);
+});
 
 // 计算属性
 const activeTab = computed(() => {
@@ -72,6 +96,10 @@ function closeTab(tabId: string) {
   const index = state.tabs.findIndex(t => t.id === tabId);
   if (index === -1) return;
 
+  // 保存关闭前的类型，用于事件通知
+  const closingTab = state.tabs[index];
+  const tabType = closingTab?.type;
+
   state.tabs.splice(index, 1);
 
   // 如果关闭的是激活 Tab，激活相邻的
@@ -83,7 +111,7 @@ function closeTab(tabId: string) {
     }
   }
 
-  eventBus.emit('tab-closed', { tabId });
+  eventBus.emit('tab-closed', { tabId, tabType });
 }
 
 function activateTab(tabId: string) {
@@ -102,6 +130,16 @@ function updateTabConfig(tabId: string, config: Record<string, any>) {
   if (!tab) return;
 
   tab.config = { ...tab.config, ...config };
+
+  // 保存时排除扩展配置
+  const filteredConfig = Object.fromEntries(
+    Object.entries(tab.config).filter(([key]) => !key.endsWith('Script'))
+  );
+  const filteredState = {
+    tabs: state.tabs.map(t => t.id === tabId ? { ...t, config: filteredConfig } : t),
+    activeTabId: state.activeTabId
+  };
+  saveState(filteredState);
   eventBus.emit('config-changed', { tabId, config: tab.config });
 }
 

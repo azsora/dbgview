@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, watch } from 'vue';
+import { computed, ref } from 'vue';
 import { open } from '@tauri-apps/plugin-dialog';
 import { tabStore } from '../../stores/tabStore';
 import { serialStore } from '../../stores/serialStore';
@@ -69,21 +69,6 @@ async function refreshPorts() {
     isPortRefreshing.value = false;
   }
 }
-
-onMounted(() => {
-  // 创建标签时扫描一次端口
-  refreshPorts();
-});
-
-// 监听当前激活的串口标签，当切换到新的串口标签时扫描端口
-watch(
-  () => tabStore.activeTab.value?.id,
-  (newTabId, oldTabId) => {
-    if (newTabId !== oldTabId && tabStore.activeTab.value?.type === 'serial') {
-      refreshPorts();
-    }
-  }
-);
 
 // 下拉框打开时刷新端口
 function handlePortDropdownOpen() {

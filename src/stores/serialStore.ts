@@ -7,8 +7,12 @@ export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'er
 export interface SerialTabState {
   connectionStatus: ConnectionStatus;
   errorMessage?: string;
-  receiveBuffer: string;
-  receiveLines: string[];  // 使用数组存储接收行，避免字符串拼接性能问题
+  receiveBuffer: string;     // 展示用的格式化字符串
+  receiveLines: {            // 原始数据行
+    timestamp: string;
+    data: number[];          // 原始字节数组
+    isTx: boolean;           // 是否为发送数据
+  }[];
   receiveMode: 'HEX' | 'ASCII';
   sendMode: 'HEX' | 'ASCII';
   autoScroll: boolean;
@@ -19,6 +23,7 @@ export interface SerialTabState {
   txBytes: number;     // 发送字节总数
   rxBytes: number;     // 接收字节总数
   currentRxBytes: number;  // 当前帧字节数
+  sendInput: string;    // 发送输入框内容
 }
 
 const STORAGE_KEY = 'serialState';
@@ -34,8 +39,7 @@ function loadState(): Partial<SerialTabState> {
 
 function saveState(state: SerialTabState) {
   try {
-    const { receiveBuffer, ...persistable } = state;
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(persistable));
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   } catch (e) {
     console.warn('Failed to save serial state:', e);
   }
@@ -56,6 +60,7 @@ const defaultState: SerialTabState = {
   txBytes: 0,
   rxBytes: 0,
   currentRxBytes: 0,
+  sendInput: '',
   ...loadState(),
 };
 
@@ -68,12 +73,10 @@ export function isPortClosing() {
   return portClosingFlag;
 }
 
-// 自动保存（排除 receiveBuffer）
-let saveTimer: ReturnType<typeof setTimeout> | null = null;
-function scheduleSave() {
-  if (saveTimer) clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => saveState(state), 500);
-}
+// 页面卸载前保存状态
+window.addEventListener('beforeunload', () => {
+  saveState(state);
+});
 
 // 计算属性
 const isConnected = computed(() => state.connectionStatus === 'connected');
@@ -154,7 +157,10 @@ async function sendData(data: string): Promise<boolean> {
     }
     state.sendHistory.push(data);
 
-    scheduleSave();
+    // 显示发送数据
+    appendSend(data, bytes);
+
+    saveState(state);
     return true;
   } catch (e) {
     state.errorMessage = `发送失败: ${e}`;
@@ -172,15 +178,45 @@ async function readData(): Promise<string> {
   }
 }
 
+function formatLine(timestamp: string, data: number[], isTx: boolean, mode: 'HEX' | 'ASCII'): string {
+  const hexStr = data.map(b => b.toString(16).padStart(2, '0')).join(' ');
+  const asciiStr = data.map(b => b >= 32 && b < 127 ? String.fromCharCode(b) : '.').join('');
+  const prefix = timestamp + (isTx ? 'Tx-> ' : 'Rx-> ');
+
+  if (mode === 'HEX') {
+    return `${prefix}${hexStr}`;
+  } else {
+    return `${prefix}${asciiStr}`;
+  }
+}
+
+// 追加单行到显示缓冲区（不重建全文）
+function appendToBuffer(formattedLine: string) {
+  if (state.receiveBuffer) {
+    state.receiveBuffer += '\n' + formattedLine;
+  } else {
+    state.receiveBuffer = formattedLine;
+  }
+}
+
 function appendReceive(data: string, rxData?: number[]) {
   const timestamp = state.timestampEnabled ? `[${formatTime(new Date())}] ` : '';
-  state.receiveLines.push(timestamp + data);
+  // rxData 是原始字节数组，直接使用；否则从 data 解析
+  const bytes = rxData ?? parseReceivedData(data);
+  state.receiveLines.push({
+    timestamp,
+    data: bytes,
+    isTx: false,
+  });
   // 限制最大行数，避免内存问题
   if (state.receiveLines.length > 1000) {
     state.receiveLines.shift();
+    // 移除首行后也要从显示缓冲区移除
+    const firstNewline = state.receiveBuffer.indexOf('\n');
+    state.receiveBuffer = firstNewline >= 0 ? state.receiveBuffer.slice(firstNewline + 1) : '';
   }
-  // 更新 receiveBuffer 用于显示
-  state.receiveBuffer = state.receiveLines.join('\n');
+  // 格式化并追加新行到显示缓冲区
+  appendToBuffer(formatLine(timestamp, bytes, false, state.receiveMode));
   // 累加接收字节数
   if (rxData) {
     state.currentRxBytes = rxData.length;
@@ -188,10 +224,29 @@ function appendReceive(data: string, rxData?: number[]) {
   }
 }
 
+function appendSend(_data: string, txData: number[]) {
+  const timestamp = state.timestampEnabled ? `[${formatTime(new Date())}] ` : '';
+  state.receiveLines.push({
+    timestamp,
+    data: txData,
+    isTx: true,
+  });
+  // 限制最大行数
+  if (state.receiveLines.length > 1000) {
+    state.receiveLines.shift();
+    const firstNewline = state.receiveBuffer.indexOf('\n');
+    state.receiveBuffer = firstNewline >= 0 ? state.receiveBuffer.slice(firstNewline + 1) : '';
+  }
+  // 格式化并追加新行到显示缓冲区
+  appendToBuffer(formatLine(timestamp, txData, true, state.sendMode));
+}
+
 function clearReceive() {
   state.receiveBuffer = '';
   state.receiveLines = [];
   state.currentRxBytes = 0;
+  state.txBytes = 0;
+  state.rxBytes = 0;
 }
 
 function resetCounters() {
@@ -211,27 +266,42 @@ function resetRxCounter() {
 
 function setReceiveMode(mode: 'HEX' | 'ASCII') {
   state.receiveMode = mode;
-  scheduleSave();
+  saveState(state);
 }
 
 function setSendMode(mode: 'HEX' | 'ASCII') {
+  // 切换到 HEX 模式时，将当前输入内容转换为 HEX 格式
+  if (mode === 'HEX' && state.sendMode !== 'HEX') {
+    const bytes = stringToBytes(state.sendInput);
+    state.sendInput = bytes.map(b => b.toString(16).padStart(2, '0')).join(' ');
+  }
+  // 切换到 ASCII 模式时，尝试将 HEX 内容转回 ASCII
+  else if (mode === 'ASCII' && state.sendMode !== 'ASCII') {
+    const bytes = hexToBytes(state.sendInput);
+    state.sendInput = bytes.map(b => b >= 32 && b < 127 ? String.fromCharCode(b) : '.').join('');
+  }
   state.sendMode = mode;
-  scheduleSave();
+  saveState(state);
 }
 
 function setWorkMode(mode: 'standard' | 'terminal') {
   state.workMode = mode;
-  scheduleSave();
+  saveState(state);
 }
 
 function toggleTimestamp() {
   state.timestampEnabled = !state.timestampEnabled;
-  scheduleSave();
+  saveState(state);
 }
 
 function toggleAutoScroll() {
   state.autoScroll = !state.autoScroll;
-  scheduleSave();
+  saveState(state);
+}
+
+function setSendInput(value: string) {
+  state.sendInput = value;
+  saveState(state);
 }
 
 // 辅助函数
@@ -254,6 +324,33 @@ function stringToBytes(str: string): number[] {
   return Array.from(str).map(c => c.charCodeAt(0));
 }
 
+// 从接收到的字符串解析出字节数组
+function parseReceivedData(data: string): number[] {
+  // 格式为: "hex |ascii|" 或纯 hex
+  const hexMatch = data.match(/^([0-9a-fA-F\s]+)\s*\|(.*)\|$/);
+  if (hexMatch) {
+    // 解析 hex 部分
+    const hexStr = hexMatch[1].replace(/\s/g, '');
+    const bytes: number[] = [];
+    for (let i = 0; i < hexStr.length; i += 2) {
+      const byte = parseInt(hexStr.substr(i, 2), 16);
+      if (!isNaN(byte)) bytes.push(byte);
+    }
+    return bytes;
+  }
+  // 尝试直接解析为 hex 字符串
+  const cleaned = data.replace(/\s/g, '');
+  if (/^[0-9a-fA-F]+$/.test(cleaned) && cleaned.length % 2 === 0) {
+    const bytes: number[] = [];
+    for (let i = 0; i < cleaned.length; i += 2) {
+      bytes.push(parseInt(cleaned.substr(i, 2), 16));
+    }
+    return bytes;
+  }
+  // 否则按 ASCII 解析
+  return Array.from(data).map(c => c.charCodeAt(0));
+}
+
 function formatTime(date: Date): string {
   return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')}.${date.getMilliseconds().toString().padStart(3, '0')}`;
 }
@@ -269,6 +366,7 @@ export const serialStore = {
   sendData,
   readData,
   appendReceive,
+  appendSend,
   clearReceive,
   setReceiveMode,
   setSendMode,
@@ -278,4 +376,5 @@ export const serialStore = {
   resetCounters,
   resetTxCounter,
   resetRxCounter,
+  setSendInput,
 };

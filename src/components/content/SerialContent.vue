@@ -4,7 +4,6 @@ import { serialStore } from '../../stores/serialStore';
 import { eventBus } from '../../eventBus';
 
 const receiveArea = ref<HTMLElement | null>(null);
-const sendInput = ref('');
 const autoScroll = ref(true);  // 自动滚动，默认开启
 
 // 接收区是否有数据
@@ -73,8 +72,9 @@ function restoreAutoScroll() {
 }
 
 async function handleSend() {
-  if (!sendInput.value.trim()) return;
-  await serialStore.sendData(sendInput.value);
+  const input = serialStore.state.sendInput;
+  if (!input.trim()) return;
+  await serialStore.sendData(input);
 }
 
 function handleKeydown(e: KeyboardEvent) {
@@ -141,15 +141,25 @@ function toggleMode() {
         >_
       </button>
 
-      <!-- 显示模式选择 -->
-      <select
-        class="mode-select"
-        :value="serialStore.state.receiveMode"
-        @change="serialStore.setReceiveMode(($event.target as HTMLSelectElement).value as 'HEX' | 'ASCII')"
+      <!-- 接收区 HEX/ASCII 切换 -->
+      <button
+        class="ctrl-btn hex-btn"
+        :class="{ active: serialStore.state.receiveMode === 'HEX' }"
+        @click="serialStore.setReceiveMode(serialStore.state.receiveMode === 'HEX' ? 'ASCII' : 'HEX')"
+        title="接收区显示模式"
       >
-        <option value="HEX">HEX</option>
-        <option value="ASCII">ASCII</option>
-      </select>
+        HEX↑
+      </button>
+
+      <!-- 发送区 HEX/ASCII 切换 -->
+      <button
+        class="ctrl-btn hex-btn"
+        :class="{ active: serialStore.state.sendMode === 'HEX' }"
+        @click="serialStore.setSendMode(serialStore.state.sendMode === 'HEX' ? 'ASCII' : 'HEX')"
+        title="发送区显示模式"
+      >
+        HEX↓
+      </button>
 
       <!-- 清除按钮 -->
       <button
@@ -171,10 +181,11 @@ function toggleMode() {
     <!-- 发送区（标准模式） -->
     <div v-if="isStandardMode" class="send-area">
       <textarea
-        v-model="sendInput"
+        :value="serialStore.state.sendInput"
         class="send-input"
         placeholder="输入发送内容..."
         rows="1"
+        @input="serialStore.setSendInput(($event.target as HTMLTextAreaElement).value)"
         @keydown="handleKeydown"
       ></textarea>
       <button
@@ -327,5 +338,12 @@ function toggleMode() {
   font-size: 14px;
   font-weight: bold;
   padding: 6px 10px;
+}
+
+.hex-btn {
+  font-family: monospace;
+  font-size: 13px;
+  padding: 6px 10px;
+  min-width: 52px;
 }
 </style>

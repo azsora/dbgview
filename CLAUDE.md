@@ -47,7 +47,9 @@ npm run tauri build
 │   │   ├── RightPanelContainer.vue    # 右属性面板
 │   │   ├── ContentContainer.vue       # 主内容区
 │   │   ├── TabBar.vue     # 标签栏
-│   │   └── StatusBar.vue  # 状态栏
+│   │   ├── StatusBar.vue  # 状态栏
+│   │   ├── Toast.vue      # Toast 弹窗组件
+│   │   └── EmptyPage.vue  # 空页面组件
 │   └── assets/            # 静态资源
 │
 ├── src-tauri/             # Rust 后端（Tauri）
@@ -71,6 +73,7 @@ npm run tauri build
 - **有标签页时**：根据该标签页类型设定的默认值显示面板，切换标签页后面板状态跟随新标签页
 
 ### 左配置面板（PanelContainer.vue）
+- **宽度**：240px
 - **图钉功能**：通过图钉按钮切换钉住状态
 - **自动隐藏**：未钉住时，鼠标离开 500ms 后自动收起
 - **边缘触发**：鼠标靠近窗口左边缘 10px 时自动滑出
@@ -82,38 +85,47 @@ npm run tauri build
 - **边缘触发**：鼠标靠近右边缘 10px 时自动滑出
 - **钉住效果**：钉住后面板保持显示
 
+### 状态栏（StatusBar.vue）
+- **显示条件**：有激活标签页时显示，空页时隐藏
+- **显示内容**：连接端口@波特率 | Tx:发送字节数 | Rx:总接收字节数-当前帧字节数
+- **交互**：Tx/Rx 可点击清除对应计数，Rx 悬停显示 tooltip"接收总数-上一次接收"
+
+### 串口助手布局（SerialContent.vue）
+- **布局顺序**：接收区 → 控制栏 → 发送区
+- **发送区持久化**：发送输入框内容受 F5 刷新影响
+- **发送显示**：发送数据在接收区显示，标记 [Tx] 前缀
+
 ## Tauri 命令
 
 通过 `invoke()` 调用 Rust 后端命令。Rust 端使用 `#[tauri::command]` 属性暴露函数给前端调用。
 
 ## 依赖说明
 
-- **前端**: Vue 3 (script setup), TypeScript, Vite, Tauri API
-- **后端**: Tauri 2, serde/serde_json (序列化), serialport crate (串口通信)
+- **前端**: Vue 3 (script setup), TypeScript, Vite, Tauri API, @tauri-apps/plugin-dialog
+- **后端**: Tauri 2, tauri-plugin-dialog, serde/serde_json (序列化), serialport crate (串口通信)
 - **日志**: log + env_logger (后端中文日志)
 - **调试库**: probe-rs (嵌入式调试)
 
 ## 串口助手功能
 
-串口助手（serial）有独立的面板布局和内容区组件：
+### 左面板组件（SerialPanelLayout.vue）
+- **基础配置**：端口、波特率、数据位、停止位、校验位、流控按钮
+- **扩展配置**：接收脚本/发送脚本（点击输入框弹出文件选择对话框，支持 .lua/.py/.js/.ts/.sh 等）
+- **端口扫描**：仅在点击端口下拉框时扫描可用端口
+- **打开/关闭按钮**：连接状态变化时自动更新文字
 
-**左面板组件**：
-- `SerialPanelLayout.vue` - 串口参数配置面板（端口、波特率、数据位、停止位、校验位、流控按钮、打开/关闭按钮）
-- `SelectControl.vue` - 下拉选择控件
-- `FlowControlButtons.vue` - 流控按钮（DSR/CTS/DTR/RTS），右对齐显示
+### 内容区组件（SerialContent.vue）
+- **接收区**：显示接收/发送数据，带时间戳（默认激活）
+- **控制栏**：时间戳开关、终端模式切换、HEX/ASCII 显示模式、清除按钮
+- **发送区**：标准模式下显示，发送后自动清空
 
-**内容区组件**：
-- `SerialContent.vue` - 数据收发显示、发送区、控制栏
+### 状态管理（serialStore.ts）
+- **持久化**：除扩展配置（`receiveScript`/`sendScript`）外的所有数据在 F5 刷新前保存
+- **字节计数**：txBytes（发送）、rxBytes（接收）、currentRxBytes（当前帧）
+- **端口关闭标志**：`isPortClosing()` 防止关闭后继续读取
 
-**控制栏特性**：
-- 时间戳按钮（默认激活）
-- 模式切换按钮（>_, 默认不激活=标准模式）
-- 显示模式选择（HEX/ASCII）
-- 清除按钮（垃圾桶图标）
-
-**状态管理**：
-- `serialStore.ts` - 串口连接状态、接收缓冲区（数组+字符串双模式）、发送历史等
-- `isPortClosing()` - 端口关闭标志，防止关闭后继续读取
+### 错误处理
+- **端口打开失败**：显示 Toast 弹窗，3秒后自动消失，带渐隐效果
 
 ## 调试方法
 
@@ -132,3 +144,5 @@ npm run tauri build
 5. Tab 类型定义在 `src/registry/tabTypeRegistry.ts`，内置类型：`serial`（串口助手）、`debug`（调试助手）
    - 每个 Tab 类型可设置 `leftPanelPinned` 和 `rightPanelPinned` 控制面板默认状态
 6. 左右面板根据 Tab 类型的 `configItems` 动态渲染控件
+7. **窗口配置**（tauri.conf.json）：默认 1280x720
+8. **Tauri 事件**：`emit("serial-data", data)` 直接发送 `Vec<u8>`，前端直接使用 `payload`（不是包装对象）

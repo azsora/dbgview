@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { theme } from './theme';
 import { tabStore } from './stores/tabStore';
+import { serialStore } from './stores/serialStore';
 import { getTabType } from './registry/tabTypeRegistry';
 import { eventBus } from './eventBus';
 import { TIMEOUT } from './constants';
@@ -12,6 +13,7 @@ import RightPanelContainer from './components/RightPanelContainer.vue';
 import ContentContainer from './components/ContentContainer.vue';
 import StatusBar from './components/StatusBar.vue';
 import TabTypeSelector from './components/TabTypeSelector.vue';
+import Toast from './components/Toast.vue';
 
 const showTypeSelector = ref(false);
 const panelPinned = ref(false);
@@ -21,6 +23,22 @@ const rightPanelVisible = ref(false);
 let draggedTabId: string | null = null;
 let leftEdgeTimer: ReturnType<typeof setTimeout> | null = null;
 let rightEdgeTimer: ReturnType<typeof setTimeout> | null = null;
+
+// 是否显示状态栏（有激活标签页时显示）
+const showStatusBar = computed(() => !!tabStore.activeTab.value);
+
+// Toast 弹窗状态
+const toastVisible = ref(false);
+const toastMessage = ref('');
+
+function showToast(message: string) {
+  toastMessage.value = message;
+  toastVisible.value = true;
+}
+
+function closeToast() {
+  toastVisible.value = false;
+}
 
 // 根据激活标签页更新面板状态
 function updatePanelStateFromActiveTab() {
@@ -69,8 +87,22 @@ onMounted(() => {
 
   // 监听标签页变化
   eventBus.on('tab-created', () => updatePanelStateFromActiveTab());
-  eventBus.on('tab-closed', () => updatePanelStateFromActiveTab());
+  eventBus.on('tab-closed', ({ tabType }) => {
+    updatePanelStateFromActiveTab();
+    // 关闭标签页时，如果是串口标签页则断开端口并清除接收区
+    if (tabType === 'serial') {
+      if (serialStore.isConnected.value) {
+        serialStore.closePort();
+      }
+      serialStore.clearReceive();
+    }
+  });
   eventBus.on('tab-activated', () => updatePanelStateFromActiveTab());
+
+  // 监听串口错误
+  eventBus.on('serial-error', ({ error }) => {
+    showToast(`端口打开失败: ${error}`);
+  });
 
   // 鼠标边缘检测 - 靠近左边缘时显示面板
   document.addEventListener('mousemove', handleMouseMove);
@@ -85,6 +117,7 @@ onUnmounted(() => {
   eventBus.off('tab-created');
   eventBus.off('tab-closed');
   eventBus.off('tab-activated');
+  eventBus.off('serial-error');
   document.removeEventListener('mousemove', handleMouseMove);
   if (leftEdgeTimer) {
     clearTimeout(leftEdgeTimer);
@@ -225,12 +258,19 @@ function handleRightPanelVisible(visible: boolean) {
       />
     </div>
 
-    <StatusBar />
+    <StatusBar v-if="showStatusBar" />
 
     <TabTypeSelector
       v-if="showTypeSelector"
       @select="handleSelectTabType"
       @close="handleCloseSelector"
+    />
+
+    <Toast
+      :message="toastMessage"
+      :visible="toastVisible"
+      :transition="true"
+      @close="closeToast"
     />
   </div>
 </template>
