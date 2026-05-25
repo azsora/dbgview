@@ -111,7 +111,7 @@ function toggleMode() {
       <pre v-if="hasData" v-text="serialStore.state.receiveBuffer"></pre>
       <div v-else class="empty-state">
         <svg class="empty-icon" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z"/>
+          <path d="M20 3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-1 16H5V6h14v11zm-3-3h-4v-1h4v1zm-2-3H8V8h6v5z"/>
         </svg>
         <span>无数据</span>
       </div>
