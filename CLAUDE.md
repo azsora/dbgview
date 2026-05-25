@@ -31,7 +31,8 @@ npm run tauri build
 │   ├── constants.ts       # 时间常量（面板隐藏延迟、边缘触发延迟等）
 │   ├── stores/            # 状态管理
 │   │   ├── tabStore.ts    # Tab 状态管理
-│   │   └── serialStore.ts # 串口状态管理
+│   │   ├── serialStore.ts # 串口状态管理
+│   │   └── debuggerStore.ts # 调试助手状态管理
 │   ├── types/             # TypeScript 类型定义
 │   │   └── tab.ts         # Tab 相关类型
 │   ├── registry/          # 注册表
@@ -39,11 +40,12 @@ npm run tauri build
 │   ├── components/        # UI 组件
 │   │   ├── panel/         # 面板相关组件
 │   │   │   ├── PanelContainer.vue     # 左配置面板
-│   │   │   ├── SerialPanelLayout.vue  # 串口面板布局
+│   │   │   ├── DebuggerPanel.vue     # 调试助手面板（根据连接类型动态渲染）
 │   │   │   ├── SelectControl.vue      # 选择控件
 │   │   │   └── FlowControlButtons.vue # 流控按钮
 │   │   ├── content/       # 内容区组件
-│   │   │   └── SerialContent.vue      # 串口内容区
+│   │   │   ├── SerialContent.vue      # 串口内容区
+│   │   │   └── DebuggerContent.vue   # 调试助手内容区（根据连接类型动态渲染）
 │   │   ├── RightPanelContainer.vue    # 右属性面板
 │   │   ├── ContentContainer.vue       # 主内容区
 │   │   ├── TabBar.vue     # 标签栏
@@ -106,10 +108,24 @@ npm run tauri build
 - **日志**: log + env_logger (后端中文日志)
 - **调试库**: probe-rs (嵌入式调试)
 
-## 串口助手功能
+## 串口助手功能（现为调试助手的一部分）
 
-### 左面板组件（SerialPanelLayout.vue）
-- **基础配置**：端口、波特率、数据位、停止位、校验位、流控按钮
+调试助手通过 `connectionType` 下拉切换不同连接类型：串口、调试器、BLE、TCP/UDP。
+
+### 连接类型
+
+| 类型 | 值 | 说明 |
+|------|-----|------|
+| serial | `serial` | 串口连接 |
+| debugger | `debugger` | 调试器连接 |
+| ble | `ble` | BLE 连接（预留扩展） |
+| tcp-udp | `tcp-udp` | TCP/UDP 连接 |
+
+### 左面板组件（DebuggerPanel.vue）
+- **连接类型下拉**：顶部下拉选择切换连接类型
+- **串口配置**：端口、波特率、数据位、停止位、校验位、流控按钮
+- **调试器配置**：芯片型号、连接地址、使能调试、采样阈值
+- **TCP/UDP 配置**：IP 地址、端口、协议类型
 - **扩展配置**：接收脚本/发送脚本（点击输入框弹出文件选择对话框，支持 .lua/.py/.js/.ts/.sh 等）
 - **端口扫描**：仅在点击端口下拉框时扫描可用端口
 - **打开/关闭按钮**：连接状态变化时自动更新文字
@@ -144,7 +160,7 @@ npm run tauri build
 2. Rust 后端逻辑应在 `src-tauri/src/lib.rs` 中实现
 3. 前端通过 `@tauri-apps/api/core` 的 `invoke` 方法调用 Rust 命令
 4. 生产构建需同时通过 TypeScript 类型检查
-5. Tab 类型定义在 `src/registry/tabTypeRegistry.ts`，内置类型：`serial`（串口助手）、`debug`（调试助手）
+5. Tab 类型定义在 `src/registry/tabTypeRegistry.ts`，内置类型：`debugger`（调试助手，包含 serial/debugger/ble/tcp-udp 四种连接类型）
    - 每个 Tab 类型可设置 `leftPanelPinned` 和 `rightPanelPinned` 控制面板默认状态
 6. 左右面板根据 Tab 类型的 `configItems` 动态渲染控件
 7. **窗口配置**（tauri.conf.json）：默认 1280x720
