@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { tabStore } from '../stores/tabStore';
 import EmptyPage from './EmptyPage.vue';
 import SerialContent from './content/SerialContent.vue';
+import DebuggerContent from './content/DebuggerContent.vue';
 
 const activeTab = computed(() => tabStore.activeTab.value);
 
@@ -14,15 +15,22 @@ const contentComponent = computed(() => {
     return SerialContent;
   }
 
+  if (activeTab.value.type === 'debugger') {
+    return DebuggerContent;
+  }
+
   return null;
 });
 
 // 是否为 serial 类型（需要填满内容区）
 const isSerialTab = computed(() => activeTab.value?.type === 'serial');
+
+// 是否为调试助手类型（需要填满内容区）
+const isDebuggerTab = computed(() => activeTab.value?.type === 'debugger');
 </script>
 
 <template>
-  <div class="content-container" :class="{ 'no-padding': isSerialTab }">
+  <div class="content-container" :class="{ 'no-padding': isSerialTab || isDebuggerTab }">
     <EmptyPage v-if="!activeTab" />
     <component
       v-else-if="contentComponent"
