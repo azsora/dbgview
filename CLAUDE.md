@@ -93,7 +93,7 @@ npm run tauri build
 ### 串口助手布局（SerialContent.vue）
 - **布局顺序**：接收区 → 控制栏 → 发送区
 - **发送区持久化**：发送输入框内容受 F5 刷新影响
-- **发送显示**：发送数据在接收区显示，标记 [Tx] 前缀
+- **消息展示**：`[时间戳] Tx->内容` 或 `Rx->内容`，末尾追加，不重建旧消息
 
 ## Tauri 命令
 
@@ -116,13 +116,16 @@ npm run tauri build
 
 ### 内容区组件（SerialContent.vue）
 - **接收区**：显示接收/发送数据，带时间戳（默认激活）
-- **控制栏**：时间戳开关、终端模式切换、HEX/ASCII 显示模式、清除按钮
+- **控制栏**：时间戳开关、终端模式切换、HEX↑（接收区HEX/ASCII）、HEX↓（发送区HEX/ASCII）、清除按钮
 - **发送区**：标准模式下显示，发送后自动清空
 
 ### 状态管理（serialStore.ts）
 - **持久化**：除扩展配置（`receiveScript`/`sendScript`）外的所有数据在 F5 刷新前保存
 - **字节计数**：txBytes（发送）、rxBytes（接收）、currentRxBytes（当前帧）
 - **端口关闭标志**：`isPortClosing()` 防止关闭后继续读取
+- **消息存储**：`receiveLines` 以 `{ timestamp, data: number[], isTx }[]` 存储原始字节，按 `receiveMode`/`sendMode` 格式化追加到 `receiveBuffer`
+- **HEX 切换**：HEX↑/HEX↓ 按钮只影响新接收/发送的消息格式，旧消息保持不变
+- **标签页关闭**：关闭串口标签页时自动断开端口并清除接收区数据
 
 ### 错误处理
 - **端口打开失败**：显示 Toast 弹窗，3秒后自动消失，带渐隐效果

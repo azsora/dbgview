@@ -50,5 +50,5 @@ export type TabEvent = {
   'serial-connected': { port: string };
   'serial-error': { error: string };
   'serial-disconnected': {};
-  'serial-data': { data: number[] };
+  'serial-data': number[];
 };

@@ -114,36 +114,72 @@ export const serialConfigTemplates = {
   },
 };
 
+// TCP/UDP 配置模板
+export const tcpUdpConfigTemplates = {
+  ip: {
+    key: 'ip',
+    label: 'IP 地址',
+    type: 'input' as const,
+    defaultValue: '192.168.1.100',
+  },
+  port: {
+    key: 'port',
+    label: '端口',
+    type: 'input' as const,
+    defaultValue: '8080',
+  },
+  protocol: {
+    key: 'protocol',
+    label: '协议',
+    type: 'select' as const,
+    options: [
+      { label: 'TCP', value: 'TCP' },
+      { label: 'UDP', value: 'UDP' },
+    ],
+    defaultValue: 'TCP',
+  },
+};
+
 // 内置 Tab 类型定义
 const builtinTypes: TabTypeDefinition[] = [
   {
-    type: 'serial',
-    title: '串口助手',
+    type: 'debugger',
+    title: '调试助手',
     configItems: [
+      // 连接类型下拉
+      {
+        key: 'connectionType',
+        label: '连接类型',
+        type: 'select' as const,
+        options: [
+          { label: '串口', value: 'serial' },
+          { label: '调试器', value: 'debugger' },
+          { label: 'BLE', value: 'ble' },
+          { label: 'TCP/UDP', value: 'tcp-udp' },
+        ],
+        defaultValue: 'serial',
+      },
+      // 串口配置（connectionType=serial 时使用）
       serialConfigTemplates.port,
       serialConfigTemplates.baudRate,
       serialConfigTemplates.dataBits,
       serialConfigTemplates.stopBits,
       serialConfigTemplates.parity,
       serialConfigTemplates.flowControl,
-    ],
-    panelComponent: 'serialPanel',
-    contentComponent: 'SerialContent',
-    leftPanelPinned: true,
-    rightPanelPinned: false,
-  },
-  {
-    type: 'debugger',
-    title: '调试助手',
-    configItems: [
+      // 调试器配置（connectionType=debugger 时使用）
       configItemTemplates.chipModel,
       configItemTemplates.connectionAddress,
       configItemTemplates.enableSwitch,
+      configItemTemplates.sampleThreshold,
+      // TCP/UDP 配置（connectionType=tcp-udp 时使用）
+      tcpUdpConfigTemplates.ip,
+      tcpUdpConfigTemplates.port,
+      tcpUdpConfigTemplates.protocol,
     ],
     panelComponent: 'DebuggerPanel',
     contentComponent: 'DebuggerContent',
     leftPanelPinned: true,
-    rightPanelPinned: true,
+    rightPanelPinned: false,
   },
 ];
 

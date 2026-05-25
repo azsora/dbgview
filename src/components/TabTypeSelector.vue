@@ -6,7 +6,7 @@ const emit = defineEmits<{
   (e: 'close'): void;
 }>();
 
-const tabTypes = getAllTabTypes();
+const tabTypes = getAllTabTypes().filter(t => t.type !== 'serial');
 
 function handleSelect(type: string) {
   emit('select', type);
