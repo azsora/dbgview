@@ -32,6 +32,13 @@ function saveState(state: TabState) {
 // 创建单例
 const state = reactive<TabState>(loadState());
 
+// 过滤掉扩展配置字段（排除 connectionType 和 port，它们需要持久化）
+const filterConfig = (config: Record<string, any>) => Object.fromEntries(
+  Object.entries(config).filter(([key]) =>
+    !key.endsWith('Script') && key !== 'connectionType' && key !== 'port'
+  )
+);
+
 // 监听变化自动保存（排除扩展配置）
 watch(
   () => ({ tabs: state.tabs, activeTabId: state.activeTabId }),
@@ -41,9 +48,7 @@ watch(
       ...newState,
       tabs: newState.tabs.map(tab => ({
         ...tab,
-        config: Object.fromEntries(
-          Object.entries(tab.config).filter(([key]) => !key.endsWith('Script'))
-        )
+        config: filterConfig(tab.config)
       }))
     };
     saveState(filteredState);
@@ -56,9 +61,7 @@ window.addEventListener('beforeunload', () => {
   const filteredState = {
     tabs: state.tabs.map(tab => ({
       ...tab,
-      config: Object.fromEntries(
-        Object.entries(tab.config).filter(([key]) => !key.endsWith('Script'))
-      )
+      config: filterConfig(tab.config)
     })),
     activeTabId: state.activeTabId
   };
