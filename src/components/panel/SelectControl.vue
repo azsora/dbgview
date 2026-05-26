@@ -73,7 +73,7 @@ function handleScroll(event: Event) {
         :value="String(opt.value)"
       />
       <template #empty>
-        <span>暂不支持芯片</span>
+        <span>空</span>
       </template>
     </el-select>
   </div>

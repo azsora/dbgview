@@ -167,6 +167,15 @@ function addTab(tab: Tab) {
   state.tabs.push(tab);
 }
 
+// 关闭所有标签页
+function closeAllTabs() {
+  // 复制一份 tabs 数组，因为 closeTab 会修改原数组
+  const tabsToClose = [...state.tabs];
+  for (const tab of tabsToClose) {
+    closeTab(tab.id);
+  }
+}
+
 export const tabStore = {
   state,
   activeTab,
@@ -177,4 +186,5 @@ export const tabStore = {
   updateTabConfig,
   removeTab,
   addTab,
+  closeAllTabs,
 };

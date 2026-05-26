@@ -249,7 +249,7 @@ const buttonType = computed(() => {
 }
 
 .serial-panel :deep(.control-label) {
-  min-width: 50px;
+  min-width: 55px;
   margin-bottom: 0;
   margin-right: 5px;
 }

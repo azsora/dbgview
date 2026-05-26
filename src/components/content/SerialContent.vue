@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
+import { listen } from '@tauri-apps/api/event';
 import { serialStore } from '../../stores/serialStore';
-import { eventBus } from '../../eventBus';
 
 const receiveArea = ref<HTMLElement | null>(null);
 const autoScroll = ref(true);  // 自动滚动，默认开启
+
+let unlisten: (() => void) | null = null;
 
 // 接收区是否有数据
 const hasData = computed(() => {
@@ -24,13 +26,17 @@ function onSerialData(payload: number[]) {
   serialStore.appendReceive(str, bytes);
 }
 
-onMounted(() => {
-  // 监听串口数据事件（事件驱动替代轮询）
-  eventBus.on('serial-data', onSerialData);
+onMounted(async () => {
+  // 监听 Tauri 串口数据事件
+  unlisten = await listen<number[]>('serial-data', (event) => {
+    onSerialData(event.payload);
+  });
 });
 
 onUnmounted(() => {
-  eventBus.off('serial-data', onSerialData);
+  if (unlisten) {
+    unlisten();
+  }
 });
 
 // 自动滚动：当 receiveBuffer 更新且滚动条在底部时自动滚动
@@ -108,7 +114,7 @@ function toggleMode() {
       :class="{ 'empty': !hasData }"
       @scroll="handleScroll"
     >
-      <pre v-if="hasData" v-text="serialStore.state.receiveBuffer"></pre>
+      <pre v-if="hasData" v-html="serialStore.state.receiveBuffer"></pre>
       <div v-else class="empty-state">
         <svg class="empty-icon" viewBox="0 0 24 24" fill="currentColor">
           <path d="M15 7h-2v2h2V7zm0 4h-2v2h2v-2zm4-4h-2v2h2V7zm0 4h-2v2h2v-2zM3 3h18v18H3V3zm2 2v14h14V5H5z"/>
@@ -216,6 +222,15 @@ function toggleMode() {
   line-height: 1.5;
   white-space: pre-wrap;
   word-break: break-all;
+}
+
+/* Tx 蓝色，Rx 黑色 */
+.receive-area :deep(.tx-color) {
+  color: #3b82f6;
+}
+
+.receive-area :deep(.rx-color) {
+  color: var(--text-primary);
 }
 
 .receive-area.empty {

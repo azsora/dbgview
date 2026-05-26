@@ -105,6 +105,11 @@ onMounted(() => {
   // 边缘检测触发
   eventBus.on('show-left-panel', handleShowLeftPanel);
   eventBus.on('show-right-panel', handleShowRightPanel);
+
+  // 窗口关闭前先关闭所有标签页
+  window.addEventListener('beforeunload', () => {
+    tabStore.closeAllTabs();
+  });
 });
 
 onUnmounted(() => {

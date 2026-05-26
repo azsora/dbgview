@@ -226,7 +226,8 @@ const buttonType = computed(() => {
 }
 
 .debugger-panel :deep(.control-label) {
-  min-width: 50px;
+  min-width: 55px;
+  font-size: var(--font-size);
   margin-bottom: 0;
   margin-right: 5px;
 }

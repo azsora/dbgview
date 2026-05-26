@@ -3,6 +3,7 @@ import { onMounted, onUnmounted } from 'vue';
 import { ElMessage } from 'element-plus';
 import { tabStore } from '../../stores/tabStore';
 import { serialStore } from '../../stores/serialStore';
+import { debuggerStore } from '../../stores/debuggerStore';
 import { getTabType } from '../../registry/tabTypeRegistry';
 import { eventBus } from '../../eventBus';
 
@@ -90,6 +91,10 @@ onMounted(() => {
       }
       serialStore.clearReceive();
       lastClosedTabConfig = config;
+    } else if (tabType === 'debugger-assistant') {
+      if (debuggerStore.isConnected.value) {
+        debuggerStore.disconnect();
+      }
     }
   });
 

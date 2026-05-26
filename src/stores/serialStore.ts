@@ -160,7 +160,6 @@ async function sendData(data: string): Promise<boolean> {
     // 显示发送数据
     appendSend(data, bytes);
 
-    saveState(state);
     return true;
   } catch (e) {
     state.errorMessage = `发送失败: ${e}`;
@@ -178,10 +177,10 @@ async function readData(): Promise<string> {
   }
 }
 
-function formatLine(timestamp: string, data: number[], isTx: boolean, mode: 'HEX' | 'ASCII'): string {
+function formatLine(timestamp: string, data: number[], _isTx: boolean, mode: 'HEX' | 'ASCII'): string {
   const hexStr = data.map(b => b.toString(16).padStart(2, '0')).join(' ');
   const asciiStr = data.map(b => b >= 32 && b < 127 ? String.fromCharCode(b) : '.').join('');
-  const prefix = timestamp + (isTx ? 'Tx-> ' : 'Rx-> ');
+  const prefix = timestamp;
 
   if (mode === 'HEX') {
     return `${prefix}${hexStr}`;
@@ -190,12 +189,15 @@ function formatLine(timestamp: string, data: number[], isTx: boolean, mode: 'HEX
   }
 }
 
-// 追加单行到显示缓冲区（不重建全文）
-function appendToBuffer(formattedLine: string) {
+// 追加单行到显示缓冲区（不重建全文），使用 HTML 颜色标识
+function appendToBuffer(formattedLine: string, isTx: boolean) {
+  // 使用颜色标识：Tx 为蓝色，Rx 为黑色
+  const colorClass = isTx ? 'tx-color' : 'rx-color';
+  const coloredLine = `<span class="${colorClass}">${formattedLine}</span>`;
   if (state.receiveBuffer) {
-    state.receiveBuffer += '\n' + formattedLine;
+    state.receiveBuffer += '\n' + coloredLine;
   } else {
-    state.receiveBuffer = formattedLine;
+    state.receiveBuffer = coloredLine;
   }
 }
 
@@ -208,15 +210,12 @@ function appendReceive(data: string, rxData?: number[]) {
     data: bytes,
     isTx: false,
   });
-  // 限制最大行数，避免内存问题
+  // 限制最大行数，避免内存问题（不再每次修剪 receiveBuffer）
   if (state.receiveLines.length > 1000) {
     state.receiveLines.shift();
-    // 移除首行后也要从显示缓冲区移除
-    const firstNewline = state.receiveBuffer.indexOf('\n');
-    state.receiveBuffer = firstNewline >= 0 ? state.receiveBuffer.slice(firstNewline + 1) : '';
   }
   // 格式化并追加新行到显示缓冲区
-  appendToBuffer(formatLine(timestamp, bytes, false, state.receiveMode));
+  appendToBuffer(formatLine(timestamp, bytes, false, state.receiveMode), false);
   // 累加接收字节数
   if (rxData) {
     state.currentRxBytes = rxData.length;
@@ -234,11 +233,10 @@ function appendSend(_data: string, txData: number[]) {
   // 限制最大行数
   if (state.receiveLines.length > 1000) {
     state.receiveLines.shift();
-    const firstNewline = state.receiveBuffer.indexOf('\n');
-    state.receiveBuffer = firstNewline >= 0 ? state.receiveBuffer.slice(firstNewline + 1) : '';
+    // 不再每次修剪 receiveBuffer，只在超过限制时记录
   }
   // 格式化并追加新行到显示缓冲区
-  appendToBuffer(formatLine(timestamp, txData, true, state.sendMode));
+  appendToBuffer(formatLine(timestamp, txData, true, state.sendMode), true);
 }
 
 function clearReceive() {

@@ -91,17 +91,11 @@ pub fn serial_close(state: State<SerialState>) -> Result<(), String> {
 
 #[tauri::command]
 pub fn serial_write(state: State<SerialState>, data: Vec<u8>) -> Result<usize, String> {
-    info!("[命令] serial_write 被调用: data_len={}", data.len());
-    let mut manager = state.0.lock().map_err(|e| {
-        error!("[命令] 获取串口管理器锁失败: {}", e);
-        e.to_string()
-    })?;
-    let result = manager.write(&data);
-    match &result {
-        Ok(n) => info!("[命令] serial_write 成功: wrote {} bytes", n),
-        Err(e) => info!("[命令] serial_write 失败: error={}", e),
-    }
-    result
+  let mut manager = state.0.lock().map_err(|e| {
+    error!("[命令] 获取串口管理器锁失败: {}", e);
+    e.to_string()
+  })?;
+  manager.write(&data)
 }
 
 #[tauri::command]

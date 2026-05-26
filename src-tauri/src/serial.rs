@@ -168,6 +168,7 @@ impl SerialManager {
                 match port.read(&mut buf) {
                     Ok(n) if n > 0 => {
                         let data = buf[..n].to_vec();
+                        info!("[串口] 接收: {} bytes", n);
                         // 通过 Tauri 事件发送到前端
                         if let Err(e) = app_handle.emit("serial-data", data) {
                             warn!("[串口] 发送事件失败: {}", e);
