@@ -1,10 +1,17 @@
 use log::{info, error};
 use probe_rs::probe::list::Lister;
-use probe_rs::{Permissions, Session};
+use probe_rs::{Permissions, Session, config};
 use probe_rs::config::TargetSelector;
 use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
 use tauri::State;
+
+// 芯片/目标信息
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ChipInfo {
+    pub name: String,
+    pub part_number: Option<u16>,
+}
 
 // 调试器信息
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -105,6 +112,27 @@ impl Default for DebuggerManager {
 #[tauri::command]
 pub fn debugger_list_probes() -> Result<Vec<DebuggerInfo>, String> {
     DebuggerManager::list_probes()
+}
+
+// 获取所有支持的芯片/目标列表
+#[tauri::command]
+pub fn debugger_list_chips() -> Result<Vec<ChipInfo>, String> {
+    info!("[调试器] 获取支持的芯片列表...");
+    // 使用 probe-rs 的 families() API 获取所有芯片家族
+    let families = config::families();
+    let mut chips: Vec<ChipInfo> = Vec::new();
+
+    for family in families {
+        for chip in family.variants() {
+            chips.push(ChipInfo {
+                name: chip.name.clone(),
+                part_number: chip.part.clone(),
+            });
+        }
+    }
+
+    info!("[调试器] 支持 {} 个芯片", chips.len());
+    Ok(chips)
 }
 
 #[tauri::command]

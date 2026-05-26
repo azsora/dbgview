@@ -2,6 +2,11 @@ import { reactive, computed } from 'vue';
 import { invoke } from '@tauri-apps/api/core';
 import { eventBus } from '../eventBus';
 
+export interface ChipInfo {
+  name: string;
+  part_number?: number;
+}
+
 export interface DebuggerInfo {
   id: string;
   name: string;
@@ -15,6 +20,7 @@ export interface DebuggerState {
   connectionStatus: ConnectionStatus;
   errorMessage?: string;
   debuggerList: DebuggerInfo[];
+  chipList: ChipInfo[];
   sessionActive: boolean;
 }
 
@@ -23,6 +29,7 @@ const state = reactive<DebuggerState>({
   connectionStatus: 'disconnected',
   errorMessage: undefined,
   debuggerList: [],
+  chipList: [],
   sessionActive: false,
 });
 
@@ -39,6 +46,19 @@ async function listDebuggers(): Promise<DebuggerInfo[]> {
   } catch (e) {
     console.error('Failed to list debuggers:', e);
     state.debuggerList = [];
+    return [];
+  }
+}
+
+// 获取支持的芯片列表
+async function listChips(): Promise<ChipInfo[]> {
+  try {
+    const list = await invoke<ChipInfo[]>('debugger_list_chips');
+    state.chipList = list;
+    return list;
+  } catch (e) {
+    console.error('Failed to list chips:', e);
+    state.chipList = [];
     return [];
   }
 }
@@ -94,6 +114,7 @@ export const debuggerStore = {
   isConnected,
   isConnecting,
   listDebuggers,
+  listChips,
   connect,
   disconnect,
   readDebugData,

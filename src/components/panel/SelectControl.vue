@@ -15,7 +15,8 @@ function handleChange(e: Event) {
   emit('update', (e.target as HTMLSelectElement).value);
 }
 
-function handleDblClick() {
+function handleDblClick(e: Event) {
+  e.stopPropagation();
   emit('dblclick');
 }
 </script>

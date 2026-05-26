@@ -22,26 +22,29 @@ const emit = defineEmits<{
 </template>
 
 <style scoped>
-/* 与 SelectControl 共享基础样式 */
 .control {
-  margin-bottom: 12px;
+  margin-bottom: 5px;
 }
 
 .control-label {
   display: block;
-  font-size: 12px;
+  font-size: var(--font-size);
   color: var(--text-primary);
   margin-bottom: 4px;
 }
 
 .control-input {
-  width: 100%;
+  width: 190px;
+  flex: none;
   padding: 6px 8px;
   border: 1px solid var(--border-color);
   border-radius: 4px;
   background: var(--bg-primary);
   color: var(--text-primary);
-  font-size: 13px;
+  font-size: var(--font-size);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .control-input:focus {

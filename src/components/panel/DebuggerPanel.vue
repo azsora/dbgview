@@ -3,7 +3,6 @@ import { computed, ref } from 'vue';
 import { tabStore } from '../../stores/tabStore';
 import { debuggerStore } from '../../stores/debuggerStore';
 import SelectControl from './SelectControl.vue';
-import InputControl from './InputControl.vue';
 
 const activeConfig = computed(() => tabStore.activeTab.value?.config ?? {});
 
@@ -17,6 +16,8 @@ const debuggerOptions = computed(() => {
 });
 
 const isDebuggerRefreshing = ref(false);
+// 芯片列表加载中
+const isChipRefreshing = ref(false);
 
 function updateConfig(key: string, value: any) {
   const activeTab = tabStore.activeTab.value;
@@ -40,6 +41,37 @@ function handleDebuggerDropdownOpen() {
   const selectEl = document.querySelector('.debugger-panel .control-input') as HTMLSelectElement;
   if (selectEl && selectEl === document.activeElement) return;
   refreshDebuggers();
+}
+
+// 芯片列表选项
+const chipOptions = computed(() => {
+  return debuggerStore.state.chipList?.map(c => ({
+    label: c.name,
+    value: c.name,
+  })) ?? [];
+});
+
+// 刷新芯片列表
+async function refreshChips() {
+  if (isChipRefreshing.value) return;
+  isChipRefreshing.value = true;
+  try {
+    await debuggerStore.listChips();
+  } finally {
+    isChipRefreshing.value = false;
+  }
+}
+
+// 芯片下拉框打开时刷新
+function handleChipDropdownOpen() {
+  const selectEl = document.querySelectorAll('.debugger-panel .control-input')[2] as HTMLSelectElement;
+  if (selectEl && selectEl === document.activeElement) return;
+  refreshChips();
+}
+
+// 芯片选择改变
+function handleChipChange(value: string | number) {
+  updateConfig('chipModel', String(value));
 }
 
 const isConnected = computed(() => debuggerStore.isConnected.value);
@@ -72,29 +104,9 @@ const speedOptions = [
   { label: '4000', value: 4000 },
 ];
 
-const isCustomSpeedMode = ref(false);
-
 // 速度KHz改变
 function handleSpeedChange(value: string | number) {
   updateConfig('speedKHz', Number(value));
-}
-
-// 自定义速度输入
-function handleCustomSpeedInput(value: string | number) {
-  const num = parseInt(String(value));
-  if (!isNaN(num) && num > 0) {
-    updateConfig('speedKHz', num);
-  }
-}
-
-// 速度下拉框双击切换到输入模式
-function handleSpeedDblClick() {
-  isCustomSpeedMode.value = true;
-}
-
-// 输入框双击切换到下拉模式
-function handleCustomSpeedDblClick() {
-  isCustomSpeedMode.value = false;
 }
 
 
@@ -147,21 +159,23 @@ const buttonClass = computed(() => {
     </div>
 
     <!-- 速度KHz -->
-    <div class="control-row" v-if="!isCustomSpeedMode">
+    <div class="control-row">
       <SelectControl
         label="速度KHz"
         :value="activeConfig.speedKHz || 1000"
         :options="speedOptions"
         @update="handleSpeedChange"
-        @dblclick="handleSpeedDblClick"
       />
     </div>
-    <div class="control-row" v-else>
-      <InputControl
-        label="速度KHz"
-        :value="activeConfig.speedKHz"
-        @update="handleCustomSpeedInput"
-        @dblclick="handleCustomSpeedDblClick"
+
+    <!-- 目标芯片 -->
+    <div class="control-row">
+      <SelectControl
+        label="目标芯片"
+        :value="activeConfig.chipModel || ''"
+        :options="chipOptions"
+        @update="handleChipChange"
+        @focus="handleChipDropdownOpen"
       />
     </div>
 
