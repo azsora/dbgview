@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { tabStore } from '../stores/tabStore';
-import { serialStore } from '../stores/serialStore';
+import { tabStore } from '../../stores/tabStore';
+import { serialStore } from '../../stores/serialStore';
 
 // 当前端口信息
 const portInfo = computed(() => {
@@ -37,7 +37,7 @@ function resetRx() {
 </script>
 
 <template>
-  <div class="status-bar">
+  <div class="serial-status">
     <el-tag :type="isConnected ? 'success' : 'info'" size="small" class="status-tag">
       <span class="status-dot" :class="{ connected: isConnected }"></span>
       {{ portInfo }}
@@ -50,13 +50,9 @@ function resetRx() {
 </template>
 
 <style scoped>
-.status-bar {
+.serial-status {
   display: flex;
   align-items: center;
-  padding: 6px 12px;
-  background: var(--status-bar-bg);
-  color: #fff;
-  font-size: 12px;
   gap: 8px;
 }
 

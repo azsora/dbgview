@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { getAllTabTypes } from '../registry/tabTypeRegistry';
+import { getAllTabTypes } from '../../registry/tabTypeRegistry';
 
 const emit = defineEmits<{
   (e: 'select', type: string): void;

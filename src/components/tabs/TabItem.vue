@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import type { Tab } from '../types/tab';
-import { eventBus } from '../eventBus';
-import { getTabType } from '../registry/tabTypeRegistry';
+import type { Tab } from '../../types/tab';
+import { eventBus } from '../../eventBus';
+import { getTabType } from '../../registry/tabTypeRegistry';
 
 const props = defineProps<{
   tab: Tab;

@@ -1,15 +1,13 @@
 <script setup lang="ts">
-import { computed, ref, onUnmounted, watch } from 'vue';
-import { tabStore } from '../stores/tabStore';
-import { getTabType } from '../registry/tabTypeRegistry';
-import { TIMEOUT } from '../constants';
-import type { TabConfigItem } from '../types/tab';
-import SelectControl from './panel/SelectControl.vue';
-import InputControl from './panel/InputControl.vue';
-import SwitchControl from './panel/SwitchControl.vue';
-import SliderControl from './panel/SliderControl.vue';
-import SerialPanelLayout from './panel/SerialPanelLayout.vue';
-import DebuggerPanel from './panel/DebuggerPanel.vue';
+import { computed, ref, watch, onUnmounted } from 'vue';
+import { tabStore } from '../../stores/tabStore';
+import { getTabType } from '../../registry/tabTypeRegistry';
+import { TIMEOUT } from '../../constants';
+import type { TabConfigItem } from '../../types/tab';
+import SelectControl from '../panel/SelectControl.vue';
+import InputControl from '../panel/InputControl.vue';
+import SwitchControl from '../panel/SwitchControl.vue';
+import SliderControl from '../panel/SliderControl.vue';
 
 const props = defineProps<{
   visible?: boolean;
@@ -49,12 +47,6 @@ const configItems = computed(() => {
   const tabType = getTabType(activeTab.type);
   return tabType?.configItems ?? [];
 });
-
-// 是否为串口助手类型
-const isSerialTab = computed(() => tabStore.activeTab.value?.type === 'serial-assistant');
-
-// 是否为调试助手类型
-const isDebuggerTab = computed(() => tabStore.activeTab.value?.type === 'debugger-assistant');
 
 // 缓存 renderControl 结果，避免重复计算
 const renderedControls = computed(() => {
@@ -150,16 +142,16 @@ onUnmounted(() => {
 
 <template>
   <div
-    class="panel-container"
+    class="right-panel-container"
     :class="{
-      'panel-hidden': !isVisible && !isPinned,
-      'panel-pinned': isPinned,
+      'right-panel-hidden': !isVisible && !isPinned,
+      'right-panel-pinned': isPinned,
     }"
     @mouseenter="handleMouseEnter"
     @mouseleave="handleMouseLeave"
   >
-    <div class="panel-header">
-      <span>配置面板</span>
+    <div class="right-panel-header">
+      <span>属性面板</span>
       <el-button
         class="pin-btn"
         :type="isPinned ? 'primary' : 'default'"
@@ -173,13 +165,8 @@ onUnmounted(() => {
         </svg>
       </el-button>
     </div>
-    <div class="panel-content">
-      <!-- 串口类型使用专用布局 -->
-      <SerialPanelLayout v-if="isSerialTab" />
-      <!-- 调试助手类型使用专用布局 -->
-      <DebuggerPanel v-else-if="isDebuggerTab" />
-      <!-- 其他类型使用通用 configItems 渲染 -->
-      <template v-else v-for="rc in renderedControls" :key="rc.key">
+    <div class="right-panel-content">
+      <template v-for="rc in renderedControls" :key="rc.key">
         <component
           v-if="rc.control"
           :is="rc.control.component"
@@ -192,28 +179,28 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-.panel-container {
-  width: 240px;
+.right-panel-container {
+  width: 220px;
   background: var(--bg-tertiary);
-  border-right: 1px solid var(--border-color);
-  padding: 5px;
+  border-left: 1px solid var(--border-color);
+  padding: 12px;
   overflow-y: auto;
   transition: width 0.3s ease, padding 0.3s ease, transform 0.3s ease;
   flex-shrink: 0;
 }
 
-.panel-container.panel-hidden {
+.right-panel-container.right-panel-hidden {
   width: 0;
   padding: 0;
   overflow: hidden;
-  border-right: none;
+  border-left: none;
 }
 
-.panel-header {
+.right-panel-header {
   font-size: 11px;
   color: var(--text-muted);
   text-transform: uppercase;
-  margin-bottom: 5px;
+  margin-bottom: 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -226,7 +213,7 @@ onUnmounted(() => {
 :deep(.el-icon) {
   font-size: 14px;
 }
-.panel-container.panel-pinned {
-  border-right: 1px solid var(--border-color);
+.right-panel-container.right-panel-pinned {
+  border-left: 1px solid var(--border-color);
 }
 </style>

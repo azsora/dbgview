@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { tabStore } from '../stores/tabStore';
+import { tabStore } from '../../stores/tabStore';
 import TabItem from './TabItem.vue';
 
 const emit = defineEmits<{
