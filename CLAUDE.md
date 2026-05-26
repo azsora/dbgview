@@ -167,3 +167,13 @@ npm run tauri build
 6. 左右面板根据 Tab 类型的 `configItems` 动态渲染控件
 7. **窗口配置**（tauri.conf.json）：默认 1280x720
 8. **Tauri 事件**：`emit("serial-data", data)` 直接发送 `Vec<u8>`，前端直接使用 `payload`（不是包装对象）
+9. **UI 控件优先使用 Element Plus**：开发时应优先使用 Element Plus 库提供的组件，避免重复造轮子：
+   - 表单控件：`el-input`、`el-select`、`el-switch`、`el-slider`
+   - 消息提示：`ElMessage`（`ElMessage.success/warning/error/info`）
+   - 对话框：`el-dialog`
+   - 按钮：`el-button`、`el-button-group`
+   - 状态标签：`el-tag`
+   - 分割线：`el-divider`
+   - 空状态：`el-empty`
+   - 图标：`@element-plus/icons-vue`（如 `Close`、`Plus` 等）
+   - 详细组件映射参考：[Element Plus 官方文档](https://element-plus.org/)

@@ -119,8 +119,8 @@ const buttonText = computed(() => {
   return '打开';
 });
 
-const buttonClass = computed(() => {
-  return isConnected.value ? 'btn-close' : 'btn-open';
+const buttonType = computed(() => {
+  return isConnected.value ? 'danger' : 'primary';
 });
 </script>
 
@@ -188,14 +188,14 @@ const buttonClass = computed(() => {
 
     <!-- 打开/关闭按钮 -->
     <div class="control-row">
-      <button
-        class="toggle-btn"
-        :class="buttonClass"
+      <el-button
+        :type="buttonType"
         :disabled="isConnecting || !activeConfig.port"
+        class="toggle-btn"
         @click="handleToggle"
       >
         {{ buttonText }}
-      </button>
+      </el-button>
     </div>
 
     <!-- 扩展配置 -->
@@ -205,10 +205,8 @@ const buttonClass = computed(() => {
       <!-- 接收设置 -->
       <div class="expand-row">
         <label class="expand-label">接收脚本</label>
-        <input
-          type="text"
-          class="script-input"
-          :value="activeConfig.receiveScript || ''"
+        <el-input
+          :model-value="activeConfig.receiveScript || ''"
           placeholder="选择脚本文件..."
           readonly
           @click="selectScriptFile('receive')"
@@ -218,10 +216,8 @@ const buttonClass = computed(() => {
       <!-- 发送设置 -->
       <div class="expand-row">
         <label class="expand-label">发送脚本</label>
-        <input
-          type="text"
-          class="script-input"
-          :value="activeConfig.sendScript || ''"
+        <el-input
+          :model-value="activeConfig.sendScript || ''"
           placeholder="选择脚本文件..."
           readonly
           @click="selectScriptFile('send')"
@@ -243,29 +239,6 @@ const buttonClass = computed(() => {
 
 .toggle-btn {
   width: 100%;
-  padding: 8px 16px;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  background: var(--bg-primary);
-  color: var(--text-secondary);
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.toggle-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.toggle-btn:hover:not(:disabled) {
-  border-color: var(--accent-color);
-}
-
-.toggle-btn.btn-close {
-  background: var(--accent-color);
-  border-color: var(--accent-color);
-  color: white;
 }
 
 /* 覆盖 SelectControl 的样式使其单行排列 */
@@ -309,30 +282,10 @@ const buttonClass = computed(() => {
   font-size: 12px;
   color: var(--text-secondary);
   margin-right: 8px;
+  flex-shrink: 0;
 }
 
-.script-input {
-  flex: 1;
-  min-height: 24px;
-  padding: 4px 8px;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  font-size: 12px;
+:deep(.el-input) {
   cursor: pointer;
-}
-
-.script-input:hover {
-  border-color: var(--accent-color);
-}
-
-.script-input:focus {
-  outline: none;
-  border-color: var(--accent-color);
-}
-
-.script-input::placeholder {
-  color: var(--text-muted);
 }
 </style>

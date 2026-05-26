@@ -6,7 +6,7 @@ const emit = defineEmits<{
   (e: 'close'): void;
 }>();
 
-// 获取所有标签类型（包括 serial-assistant）
+// 获取所有标签类型
 const tabTypes = getAllTabTypes();
 
 function handleSelect(type: string) {
@@ -15,84 +15,29 @@ function handleSelect(type: string) {
 </script>
 
 <template>
-  <div class="modal-overlay" @click.self="emit('close')">
-    <div class="modal">
-      <div class="modal-header">
-        <h3>选择标签类型</h3>
-        <button class="close-btn" @click="emit('close')">×</button>
-      </div>
-      <div class="modal-body">
-        <div class="type-grid">
-          <div
-            v-for="tabType in tabTypes"
-            :key="tabType.type"
-            class="type-card"
-            @click="handleSelect(tabType.type)"
-          >
-            <div class="type-icon">{{ tabType.icon }}</div>
-            <div class="type-name">{{ tabType.title }}</div>
-          </div>
-        </div>
+  <el-dialog
+    title="选择标签类型"
+    :model-value="true"
+    width="320"
+    :close-on-click-modal="true"
+    @close="emit('close')"
+    @update:model-value="emit('close')"
+  >
+    <div class="type-grid">
+      <div
+        v-for="tabType in tabTypes"
+        :key="tabType.type"
+        class="type-card"
+        @click="handleSelect(tabType.type)"
+      >
+        <div class="type-icon">{{ tabType.icon }}</div>
+        <div class="type-name">{{ tabType.title }}</div>
       </div>
     </div>
-  </div>
+  </el-dialog>
 </template>
 
 <style scoped>
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal {
-  background: var(--bg-primary);
-  border-radius: 8px;
-  min-width: 320px;
-  max-width: 480px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-}
-
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.modal-header h3 {
-  margin: 0;
-  font-size: 16px;
-  color: var(--text-primary);
-}
-
-.close-btn {
-  width: 28px;
-  height: 28px;
-  border: none;
-  background: transparent;
-  font-size: 20px;
-  cursor: pointer;
-  color: var(--text-secondary);
-  border-radius: 4px;
-}
-
-.close-btn:hover {
-  background: var(--bg-secondary);
-}
-
-.modal-body {
-  padding: 16px;
-}
-
 .type-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

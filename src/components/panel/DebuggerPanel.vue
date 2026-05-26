@@ -38,8 +38,7 @@ async function refreshDebuggers() {
 
 function handleDebuggerDropdownOpen() {
   // 仅在下拉框未展开时扫描
-  const selectEl = document.querySelector('.debugger-panel .control-input') as HTMLSelectElement;
-  if (selectEl && selectEl === document.activeElement) return;
+  if (isDebuggerRefreshing.value) return;
   refreshDebuggers();
 }
 
@@ -64,8 +63,7 @@ async function refreshChips() {
 
 // 芯片下拉框打开时刷新
 function handleChipDropdownOpen() {
-  const selectEl = document.querySelectorAll('.debugger-panel .control-input')[2] as HTMLSelectElement;
-  if (selectEl && selectEl === document.activeElement) return;
+  if (isChipRefreshing.value) return;
   refreshChips();
 }
 
@@ -129,8 +127,8 @@ const buttonText = computed(() => {
   return '连接';
 });
 
-const buttonClass = computed(() => {
-  return isConnected.value ? 'btn-close' : 'btn-open';
+const buttonType = computed(() => {
+  return isConnected.value ? 'danger' : 'primary';
 });
 </script>
 
@@ -182,14 +180,14 @@ const buttonClass = computed(() => {
 
     <!-- 连接/断开按钮 -->
     <div class="control-row">
-      <button
-        class="toggle-btn"
-        :class="buttonClass"
+      <el-button
+        :type="buttonType"
         :disabled="isConnecting || !activeConfig.debuggerId"
+        class="toggle-btn"
         @click="handleToggle"
       >
         {{ buttonText }}
-      </button>
+      </el-button>
     </div>
   </div>
 </template>
@@ -206,29 +204,6 @@ const buttonClass = computed(() => {
 
 .toggle-btn {
   width: 100%;
-  padding: 8px 16px;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  background: var(--bg-primary);
-  color: var(--text-secondary);
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.toggle-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.toggle-btn:hover:not(:disabled) {
-  border-color: var(--accent-color);
-}
-
-.toggle-btn.btn-close {
-  background: var(--accent-color);
-  border-color: var(--accent-color);
-  color: white;
 }
 
 .debugger-panel :deep(.select-control) {

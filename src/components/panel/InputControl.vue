@@ -12,11 +12,10 @@ const emit = defineEmits<{
 <template>
   <div class="control input-control">
     <label class="control-label">{{ label }}</label>
-    <input
-      type="text"
+    <el-input
+      :model-value="value"
       class="control-input"
-      :value="value"
-      @input="emit('update', ($event.target as HTMLInputElement).value)"
+      @input="emit('update', ($event as string))"
     />
   </div>
 </template>
@@ -24,31 +23,20 @@ const emit = defineEmits<{
 <style scoped>
 .control {
   margin-bottom: 5px;
+  display: flex;
+  align-items: center;
 }
 
 .control-label {
-  display: block;
+  min-width: 50px;
   font-size: var(--font-size);
   color: var(--text-primary);
-  margin-bottom: 4px;
+  margin-right: 5px;
+  flex-shrink: 0;
 }
 
 .control-input {
-  width: 190px;
-  flex: none;
-  padding: 6px 8px;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  font-size: var(--font-size);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.control-input:focus {
-  outline: none;
-  border-color: var(--accent-color);
+  flex: 1;
+  min-width: 0;
 }
 </style>

@@ -38,13 +38,13 @@ function resetRx() {
 
 <template>
   <div class="status-bar">
-    <span class="status-item">
+    <el-tag :type="isConnected ? 'success' : 'info'" size="small" class="status-tag">
       <span class="status-dot" :class="{ connected: isConnected }"></span>
       {{ portInfo }}
-    </span>
-    <span class="status-divider">|</span>
+    </el-tag>
+    <el-divider direction="vertical" />
     <span class="status-item clickable" @click="resetTx">{{ txInfo }}</span>
-    <span class="status-divider">|</span>
+    <el-divider direction="vertical" />
     <span class="status-item clickable" @click="resetRx" :title="`接收总数-上一次接收`">{{ rxInfo }}</span>
   </div>
 </template>
@@ -57,19 +57,20 @@ function resetRx() {
   background: var(--status-bar-bg);
   color: #fff;
   font-size: 12px;
-  gap: 12px;
+  gap: 8px;
 }
 
-.status-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+.status-tag {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
 }
 
 .status-dot {
-  width: 8px;
-  height: 8px;
+  display: inline-block;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
+  margin-right: 4px;
   background: #ff4444;
 }
 
@@ -77,18 +78,22 @@ function resetRx() {
   background: #44ff44;
 }
 
-.status-divider {
-  opacity: 0.5;
-}
-
-.status-item.clickable {
-  cursor: pointer;
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   padding: 2px 6px;
   border-radius: 3px;
+  cursor: pointer;
   transition: background 0.2s;
 }
 
-.status-item.clickable:hover {
+.status-item:hover {
   background: rgba(255, 255, 255, 0.1);
+}
+
+:deep(.el-divider) {
+  margin: 0 4px;
+  background: rgba(255, 255, 255, 0.3);
 }
 </style>

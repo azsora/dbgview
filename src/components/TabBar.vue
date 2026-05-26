@@ -52,12 +52,19 @@ function handleDrop(event: DragEvent) {
         @click="handleTabClick(tab.id)"
         @close="handleTabClose(tab.id)"
       />
-      <button class="new-tab-btn" @click="emit('newTab')" title="新建标签">
-        +
-      </button>
+      <el-button class="new-tab-btn" @click="emit('newTab')" title="新建标签">
+        <el-icon><Plus /></el-icon>
+      </el-button>
     </div>
   </div>
 </template>
+
+<script lang="ts">
+import { Plus } from '@element-plus/icons-vue';
+export default {
+  components: { Plus },
+};
+</script>
 
 <style scoped>
 .tab-bar {
@@ -79,17 +86,5 @@ function handleDrop(event: DragEvent) {
 .new-tab-btn {
   padding: 6px 14px;
   margin: 0;
-  background: var(--accent-color);
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background 0.15s;
-  flex-shrink: 0;
-}
-
-.new-tab-btn:hover {
-  background: var(--accent-hover);
 }
 </style>

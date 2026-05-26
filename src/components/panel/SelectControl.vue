@@ -11,66 +11,48 @@ const emit = defineEmits<{
   (e: 'dblclick'): void;
 }>();
 
-function handleChange(e: Event) {
-  emit('update', (e.target as HTMLSelectElement).value);
-}
-
-function handleDblClick(e: Event) {
-  e.stopPropagation();
-  emit('dblclick');
+function handleChange(value: string | number) {
+  emit('update', value);
 }
 </script>
 
 <template>
   <div class="control select-control">
     <label class="control-label">{{ label }}</label>
-    <select
-      class="control-input"
-      :value="value"
+    <el-select
+      :model-value="value"
+      class="control-select"
+      placeholder="请选择"
       @change="handleChange"
-      @mousedown="emit('focus')"
-      @dblclick="handleDblClick"
+      @focus="emit('focus')"
     >
-      <option v-for="opt in options" :key="opt.value" :value="opt.value">
-        {{ opt.label }}
-      </option>
-    </select>
+      <el-option
+        v-for="opt in options"
+        :key="opt.value"
+        :label="opt.label"
+        :value="opt.value"
+      />
+    </el-select>
   </div>
 </template>
 
 <style scoped>
 .control {
   margin-bottom: 5px;
+  display: flex;
+  align-items: center;
 }
 
 .control-label {
-  display: block;
+  min-width: 50px;
   font-size: var(--font-size);
   color: var(--text-primary);
-  margin-bottom: 4px;
+  margin-right: 5px;
+  flex-shrink: 0;
 }
 
-.control-input {
-  width: 100%;
-  padding: 6px 8px;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  font-size: var(--font-size);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.control-input:focus {
-  outline: none;
-  border-color: var(--accent-color);
-}
-
-.control-input option {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.control-select {
+  flex: 1;
+  min-width: 0;
 }
 </style>

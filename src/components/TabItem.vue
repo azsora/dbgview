@@ -45,15 +45,18 @@ function handleDragEnd(_e: DragEvent) {
   >
     <span v-if="tabIcon" class="tab-icon">{{ tabIcon }}</span>
     <span class="tab-title">{{ tab.title }}</span>
-    <button
-      class="tab-close"
-      @click.stop="emit('close')"
-      title="关闭"
-    >
-      ×
-    </button>
+    <el-icon class="tab-close" @click.stop="emit('close')">
+      <Close />
+    </el-icon>
   </div>
 </template>
+
+<script lang="ts">
+import { Close } from '@element-plus/icons-vue';
+export default {
+  components: { Close },
+};
+</script>
 
 <style scoped>
 .tab-item {
@@ -104,19 +107,10 @@ function handleDragEnd(_e: DragEvent) {
 
 .tab-close {
   margin-left: 8px;
-  width: 18px;
-  height: 18px;
-  border: none;
-  background: rgba(0, 0, 0, 0.1);
-  border-radius: 3px;
-  cursor: pointer;
-  font-size: 14px;
-  line-height: 1;
+  font-size: 12px;
   color: var(--text-secondary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   opacity: 0;
+  cursor: pointer;
   transition: opacity 0.15s;
 }
 
@@ -125,11 +119,6 @@ function handleDragEnd(_e: DragEvent) {
 }
 
 .tab-close:hover {
-  background: rgba(0, 0, 0, 0.2);
-}
-
-.tab-close.disabled {
-  cursor: not-allowed;
-  opacity: 0.3 !important;
+  color: var(--text-primary);
 }
 </style>

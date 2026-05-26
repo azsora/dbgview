@@ -56,10 +56,6 @@ const isSerialTab = computed(() => tabStore.activeTab.value?.type === 'serial-as
 // 是否为调试助手类型
 const isDebuggerTab = computed(() => tabStore.activeTab.value?.type === 'debugger-assistant');
 
-// TODO: 后续添加 BLE/TCP 面板时启用
-// const isBleTab = computed(() => tabStore.activeTab.value?.type === 'ble-assistant');
-// const isTcpTab = computed(() => tabStore.activeTab.value?.type === 'tcp-assistant');
-
 // 缓存 renderControl 结果，避免重复计算
 const renderedControls = computed(() => {
   const items = configItems.value;
@@ -164,16 +160,18 @@ onUnmounted(() => {
   >
     <div class="panel-header">
       <span>配置面板</span>
-      <button
+      <el-button
         class="pin-btn"
-        :class="{ 'pin-active': isPinned }"
+        :type="isPinned ? 'primary' : 'default'"
+        size="small"
+        text
         @click="togglePin"
         :title="isPinned ? '取消钉住' : '钉住面板'"
       >
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+        <svg width="14" height="14" viewBox="0 0 24 24" :fill="isPinned ? 'var(--accent-color)' : 'var(--text-muted)'">
           <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/>
         </svg>
-      </button>
+      </el-button>
     </div>
     <div class="panel-content">
       <!-- 串口类型使用专用布局 -->
@@ -222,32 +220,12 @@ onUnmounted(() => {
 }
 
 .pin-btn {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
   padding: 4px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.2s, background 0.2s;
 }
 
-.pin-btn:hover {
-  color: var(--text-primary);
-  background: var(--bg-hover);
+:deep(.el-icon) {
+  font-size: 14px;
 }
-
-.pin-btn.pin-active {
-  color: var(--color-primary);
-}
-
-.panel-content {
-  /* 内容区滚动 */
-}
-
-/* 钉住时保持边框 */
 .panel-container.panel-pinned {
   border-right: 1px solid var(--border-color);
 }

@@ -51,27 +51,27 @@ const buttonText = computed(() => {
   return '打开';
 });
 
-const buttonClass = computed(() => {
-  if (status.value === 'connected') return 'btn-close';
-  if (status.value === 'error') return 'btn-retry';
-  return 'btn-open';
+const buttonType = computed(() => {
+  if (status.value === 'connected') return 'danger';
+  if (status.value === 'error') return 'warning';
+  return 'primary';
 });
 </script>
 
 <template>
   <div class="connection-status">
-    <div class="status-indicator" :class="statusClass">
-      <span class="indicator-dot"></span>
-      <span class="status-text">{{ statusText }}</span>
-    </div>
-    <button
-      class="toggle-btn"
-      :class="buttonClass"
+    <el-tag :type="statusClass === 'connected' ? 'success' : statusClass === 'error' ? 'danger' : 'info'" size="small">
+      <span class="status-dot" :class="statusClass"></span>
+      {{ statusText }}
+    </el-tag>
+    <el-button
+      :type="buttonType"
+      size="small"
       :disabled="status === 'connecting'"
       @click="handleToggle"
     >
       {{ buttonText }}
-    </button>
+    </el-button>
   </div>
 </template>
 
@@ -85,73 +85,20 @@ const buttonClass = computed(() => {
   border-top: 1px solid var(--border-color);
 }
 
-.status-indicator {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-}
-
-.indicator-dot {
-  width: 8px;
-  height: 8px;
+.status-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
+  margin-right: 4px;
   background: var(--color-danger);
 }
 
-.status-indicator.connecting .indicator-dot {
+.status-dot.connecting {
   background: var(--color-warning);
-  animation: pulse 1s infinite;
 }
 
-.status-indicator.connected .indicator-dot {
+.status-dot.connected {
   background: var(--color-success);
-}
-
-.status-indicator.error .indicator-dot {
-  background: var(--color-danger);
-}
-
-.status-text {
-  color: var(--text-secondary);
-}
-
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-.toggle-btn {
-  padding: 6px 16px;
-  border: none;
-  border-radius: 4px;
-  font-size: 13px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.toggle-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.btn-open {
-  background: var(--color-primary);
-  color: white;
-}
-
-.btn-close {
-  background: var(--color-danger);
-  color: white;
-}
-
-.btn-retry {
-  background: var(--color-warning);
-  color: white;
 }
 </style>

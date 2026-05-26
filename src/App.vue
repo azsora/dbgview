@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ElMessage } from 'element-plus';
 import { theme } from './theme';
 import { tabStore } from './stores/tabStore';
 import { serialStore } from './stores/serialStore';
@@ -13,7 +14,6 @@ import RightPanelContainer from './components/RightPanelContainer.vue';
 import ContentContainer from './components/ContentContainer.vue';
 import StatusBar from './components/StatusBar.vue';
 import TabTypeSelector from './components/TabTypeSelector.vue';
-import Toast from './components/Toast.vue';
 
 const showTypeSelector = ref(false);
 const panelPinned = ref(false);
@@ -28,18 +28,7 @@ let lastClosedTabConfig: Record<string, any> | null = null;  // 保存最后关�
 // 是否显示状态栏（有激活标签页时显示）
 const showStatusBar = computed(() => !!tabStore.activeTab.value);
 
-// Toast 弹窗状态
-const toastVisible = ref(false);
-const toastMessage = ref('');
-
-function showToast(message: string) {
-  toastMessage.value = message;
-  toastVisible.value = true;
-}
-
-function closeToast() {
-  toastVisible.value = false;
-}
+// Toast 弹窗直接使用 ElMessage
 
 // 根据激活标签页更新面板状态
 function updatePanelStateFromActiveTab() {
@@ -104,7 +93,7 @@ onMounted(() => {
 
   // 监听串口错误
   eventBus.on('serial-error', ({ error }) => {
-    showToast(`端口打开失败: ${error}`);
+    ElMessage.error(`端口打开失败: ${error}`);
   });
 
   // 鼠标边缘检测 - 靠近左边缘时显示面板
@@ -272,13 +261,6 @@ function handleRightPanelVisible(visible: boolean) {
       v-if="showTypeSelector"
       @select="handleSelectTabType"
       @close="handleCloseSelector"
-    />
-
-    <Toast
-      :message="toastMessage"
-      :visible="toastVisible"
-      :transition="true"
-      @close="closeToast"
     />
   </div>
 </template>
