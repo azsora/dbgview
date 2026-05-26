@@ -70,9 +70,9 @@ async function refreshPorts() {
   }
 }
 
-// 下拉框打开时刷新端口
-function handlePortDropdownOpen() {
-  if (!isPortRefreshing.value) {
+// 下拉框展开时刷新端口
+function handlePortVisibleChange(visible: boolean) {
+  if (visible) {
     refreshPorts();
   }
 }
@@ -133,7 +133,7 @@ const buttonType = computed(() => {
         :value="activeConfig.port || ''"
         :options="portOptions"
         @update="(v) => updateConfig('port', v)"
-        @focus="handlePortDropdownOpen"
+        @visible-change="handlePortVisibleChange"
       />
     </div>
 

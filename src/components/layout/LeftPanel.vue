@@ -62,13 +62,16 @@ onUnmounted(() => {
 
 // 根据激活标签页类型获取面板组件
 const panelComponent = computed(() => {
+  const start = performance.now();
   const activeTab = tabStore.activeTab.value;
   if (!activeTab) return null;
 
   const tabType = getTabType(activeTab.type);
   if (!tabType?.panelComponent) return null;
 
-  return getPanel(tabType.panelComponent);
+  const component = getPanel(tabType.panelComponent);
+  console.log('LeftPanel panelComponent resolved:', activeTab.type, performance.now() - start, 'ms');
+  return component;
 });
 </script>
 

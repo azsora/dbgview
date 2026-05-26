@@ -1,10 +1,11 @@
 use log::{info, error};
 use probe_rs::probe::list::Lister;
-use probe_rs::{Permissions, Session, config};
+use probe_rs::{Permissions, Session, config::Registry};
 use probe_rs::config::TargetSelector;
 use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
-use tauri::State;
+use tauri::{State, Manager};
+use tokio::task;
 
 // 芯片/目标信息
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -25,11 +26,12 @@ pub struct DebuggerState(pub Mutex<DebuggerManager>);
 
 pub struct DebuggerManager {
     session: Option<Session>,
+    chip_cache: Option<Vec<ChipInfo>>,
 }
 
 impl DebuggerManager {
     pub fn new() -> Self {
-        Self { session: None }
+        Self { session: None, chip_cache: None }
     }
 
     // 扫描可用调试器
@@ -114,15 +116,14 @@ pub fn debugger_list_probes() -> Result<Vec<DebuggerInfo>, String> {
     DebuggerManager::list_probes()
 }
 
-// 获取所有支持的芯片/目标列表
-#[tauri::command]
-pub fn debugger_list_chips() -> Result<Vec<ChipInfo>, String> {
-    info!("[调试器] 获取支持的芯片列表...");
-    // 使用 probe-rs 的 families() API 获取所有芯片家族
-    let families = config::families();
+// 生成芯片列表（在独立线程中执行）
+fn generate_chip_list() -> Vec<ChipInfo> {
+    let start = std::time::Instant::now();
+    info!("[调试器] 开始生成芯片列表（后台线程）...");
+    let registry = Registry::from_builtin_families();
     let mut chips: Vec<ChipInfo> = Vec::new();
 
-    for family in families {
+    for family in registry.families() {
         for chip in family.variants() {
             chips.push(ChipInfo {
                 name: chip.name.clone(),
@@ -131,8 +132,65 @@ pub fn debugger_list_chips() -> Result<Vec<ChipInfo>, String> {
         }
     }
 
-    info!("[调试器] 支持 {} 个芯片", chips.len());
+    info!("[调试器] 生成完成，共 {} 个芯片，耗时 {:?}", chips.len(), start.elapsed());
+    chips
+}
+
+// 获取芯片总数
+#[tauri::command]
+pub async fn debugger_list_chips_count(app: tauri::AppHandle) -> Result<usize, String> {
+    let chips = debugger_list_chips_internal(&app).await?;
+    Ok(chips.len())
+}
+
+// 分页获取芯片列表
+#[tauri::command]
+pub async fn debugger_list_chips_paged(
+    app: tauri::AppHandle,
+    page: usize,
+    page_size: usize,
+) -> Result<Vec<ChipInfo>, String> {
+    let chips = debugger_list_chips_internal(&app).await?;
+    let start = page * page_size;
+    if start >= chips.len() {
+        return Ok(vec![]);
+    }
+    let end = (start + page_size).min(chips.len());
+    Ok(chips[start..end].to_vec())
+}
+
+// 内部获取芯片列表（共享逻辑）
+async fn debugger_list_chips_internal(app: &tauri::AppHandle) -> Result<Vec<ChipInfo>, String> {
+    // 先尝试从内存缓存获取
+    let cache = {
+        let state = app.state::<DebuggerState>();
+        let guard = state.0.lock().ok();
+        guard.and_then(|m| m.chip_cache.clone())
+    };
+
+    if let Some(cached_chips) = cache {
+        info!("[调试器] 使用内存缓存的芯片列表");
+        return Ok(cached_chips);
+    }
+
+    // 在阻塞线程中执行耗时操作
+    let chips = task::spawn_blocking(generate_chip_list)
+        .await
+        .map_err(|e| format!("线程执行失败: {}", e))?;
+
+    // 更新内存缓存
+    let state = app.state::<DebuggerState>();
+    if let Ok(mut manager) = state.0.lock() {
+        manager.chip_cache = Some(chips.clone());
+    }
+
     Ok(chips)
+}
+
+// 获取所有支持的芯片/目标列表
+#[tauri::command]
+pub async fn debugger_list_chips(app: tauri::AppHandle) -> Result<Vec<ChipInfo>, String> {
+    debugger_list_chips_internal(&app).await
 }
 
 #[tauri::command]

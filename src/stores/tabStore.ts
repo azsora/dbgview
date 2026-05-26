@@ -85,6 +85,7 @@ const tabCount = computed(() => state.tabs.length);
 
 // 操作方法
 function createTab(type: string, title: string, config: Record<string, any> = {}): Tab {
+  console.time('createTab');
   const tab: Tab = {
     id: generateId(),
     type,
@@ -98,6 +99,7 @@ function createTab(type: string, title: string, config: Record<string, any> = {}
   state.tabs.push(tab);
   state.activeTabId = tab.id;
 
+  console.timeEnd('createTab');
   eventBus.emit('tab-created', { tabId: tab.id, tabType: type });
 
   return tab;

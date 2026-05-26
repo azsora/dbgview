@@ -1,18 +1,47 @@
 <script setup lang="ts">
-defineProps<{
+import { onMounted } from 'vue';
+
+const props = defineProps<{
   label: string;
   value: string | number;
   options: { label: string; value: string | number }[];
+  filterable?: boolean;
 }>();
 
 const emit = defineEmits<{
   (e: 'update', value: string | number): void;
   (e: 'focus'): void;
   (e: 'dblclick'): void;
+  (e: 'visibleChange', visible: boolean): void;
+  (e: 'filter', query: string): void;
+  (e: 'scroll', event: Event): void;
 }>();
+
+const startTime = performance.now();
+
+// 初始化完成时打印耗时
+onMounted(() => {
+  console.log('SelectControl mounted:', props.label, performance.now() - startTime, 'ms');
+});
 
 function handleChange(value: string | number) {
   emit('update', value);
+}
+
+function handleFocus() {
+  emit('focus');
+}
+
+function handleBlur() {
+  emit('focus');
+}
+
+function handleVisibleChange(visible: boolean) {
+  emit('visibleChange', visible);
+}
+
+function handleScroll(event: Event) {
+  emit('scroll', event);
 }
 </script>
 
@@ -23,15 +52,29 @@ function handleChange(value: string | number) {
       :model-value="value"
       class="control-select"
       placeholder="请选择"
+      :filterable="filterable"
+      :allow-create="false"
+      :default-first-option="false"
+      :reserve-keyword="true"
+      :loading="false"
+      :virtual="true"
+      :scrollbar="true"
       @change="handleChange"
-      @focus="emit('focus')"
+      @focus="handleFocus"
+      @blur="handleBlur"
+      @visible-change="handleVisibleChange"
+      @filter="emit('filter', $event)"
+      @scroll="handleScroll"
     >
       <el-option
         v-for="opt in options"
-        :key="opt.value"
-        :label="opt.label"
-        :value="opt.value"
+        :key="String(opt.value)"
+        :label="String(opt.label)"
+        :value="String(opt.value)"
       />
+      <template #empty>
+        <span>暂不支持芯片</span>
+      </template>
     </el-select>
   </div>
 </template>

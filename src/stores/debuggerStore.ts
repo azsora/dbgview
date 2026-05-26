@@ -21,6 +21,8 @@ export interface DebuggerState {
   errorMessage?: string;
   debuggerList: DebuggerInfo[];
   chipList: ChipInfo[];
+  chipListLoaded: boolean;  // 芯片列表是否已加载
+  chipListLoading: boolean; // 芯片列表是否正在加载
   sessionActive: boolean;
 }
 
@@ -30,6 +32,8 @@ const state = reactive<DebuggerState>({
   errorMessage: undefined,
   debuggerList: [],
   chipList: [],
+  chipListLoaded: false,
+  chipListLoading: false,
   sessionActive: false,
 });
 
@@ -50,15 +54,42 @@ async function listDebuggers(): Promise<DebuggerInfo[]> {
   }
 }
 
-// 获取支持的芯片列表
+// 获取支持的芯片列表（带缓存，忽略重复调用）
 async function listChips(): Promise<ChipInfo[]> {
+  // 已有数据或正在加载中，直接返回
+  if (state.chipListLoaded || state.chipListLoading) {
+    return state.chipList;
+  }
+
+  state.chipListLoading = true;
+  console.time('listChips');
   try {
+    // 直接获取完整列表（后端已缓存）
     const list = await invoke<ChipInfo[]>('debugger_list_chips');
+    console.timeEnd('listChips');
     state.chipList = list;
+    state.chipListLoaded = true;
     return list;
   } catch (e) {
+    console.timeEnd('listChips');
     console.error('Failed to list chips:', e);
     state.chipList = [];
+    return [];
+  } finally {
+    state.chipListLoading = false;
+  }
+}
+
+// 搜索芯片（远程过滤）
+async function searchChips(keyword: string): Promise<ChipInfo[]> {
+  try {
+    // 获取完整列表进行过滤（已缓存，不会重复加载）
+    const allChips = await listChips();
+    if (!keyword) return allChips;
+    const query = keyword.toLowerCase();
+    return allChips.filter(c => c.name.toLowerCase().includes(query));
+  } catch (e) {
+    console.error('Failed to search chips:', e);
     return [];
   }
 }
@@ -115,6 +146,7 @@ export const debuggerStore = {
   isConnecting,
   listDebuggers,
   listChips,
+  searchChips,
   connect,
   disconnect,
   readDebugData,

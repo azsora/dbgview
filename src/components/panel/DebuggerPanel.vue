@@ -1,8 +1,13 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import { tabStore } from '../../stores/tabStore';
 import { debuggerStore } from '../../stores/debuggerStore';
 import SelectControl from './SelectControl.vue';
+
+const startTime = performance.now();
+onMounted(() => {
+  console.log('DebuggerPanel mounted:', performance.now() - startTime, 'ms');
+});
 
 const activeConfig = computed(() => tabStore.activeTab.value?.config ?? {});
 
@@ -16,8 +21,6 @@ const debuggerOptions = computed(() => {
 });
 
 const isDebuggerRefreshing = ref(false);
-// 芯片列表加载中
-const isChipRefreshing = ref(false);
 
 function updateConfig(key: string, value: any) {
   const activeTab = tabStore.activeTab.value;
@@ -36,40 +39,42 @@ async function refreshDebuggers() {
   }
 }
 
-function handleDebuggerDropdownOpen() {
-  // 仅在下拉框未展开时扫描
-  if (isDebuggerRefreshing.value) return;
-  refreshDebuggers();
-}
-
-// 芯片列表选项
-const chipOptions = computed(() => {
-  return debuggerStore.state.chipList?.map(c => ({
-    label: c.name,
-    value: c.name,
-  })) ?? [];
-});
-
-// 刷新芯片列表
-async function refreshChips() {
-  if (isChipRefreshing.value) return;
-  isChipRefreshing.value = true;
-  try {
-    await debuggerStore.listChips();
-  } finally {
-    isChipRefreshing.value = false;
+function handleDebuggerVisibleChange(visible: boolean) {
+  if (visible) {
+    refreshDebuggers();
   }
 }
 
-// 芯片下拉框打开时刷新
-function handleChipDropdownOpen() {
-  if (isChipRefreshing.value) return;
-  refreshChips();
+// 芯片相关状态
+const chipSearchLoading = ref(false);
+const chipOptions = ref<{ label: string; value: string }[]>([]);
+const allChipOptions = ref<{ label: string; value: string }[]>([]);
+
+// 加载初始芯片列表
+async function loadChipOptions() {
+  if (allChipOptions.value.length > 0) return;
+  try {
+    chipSearchLoading.value = true;
+    const chips = await debuggerStore.listChips();
+    allChipOptions.value = chips.map(c => ({ label: c.name, value: c.name }));
+    chipOptions.value = allChipOptions.value;
+  } catch (e) {
+    console.error('Failed to load chip options:', e);
+  } finally {
+    chipSearchLoading.value = false;
+  }
 }
 
 // 芯片选择改变
 function handleChipChange(value: string | number) {
   updateConfig('chipModel', String(value));
+}
+
+// 芯片下拉打开
+function handleChipVisibleChange(visible: boolean) {
+  if (visible) {
+    loadChipOptions();
+  }
 }
 
 const isConnected = computed(() => debuggerStore.isConnected.value);
@@ -142,7 +147,7 @@ const buttonType = computed(() => {
         :value="activeConfig.debuggerId || ''"
         :options="debuggerOptions"
         @update="handleDebuggerChange"
-        @focus="handleDebuggerDropdownOpen"
+        @visible-change="handleDebuggerVisibleChange"
       />
     </div>
 
@@ -168,13 +173,21 @@ const buttonType = computed(() => {
 
     <!-- 目标芯片 -->
     <div class="control-row">
-      <SelectControl
-        label="目标芯片"
-        :value="activeConfig.chipModel || ''"
-        :options="chipOptions"
-        @update="handleChipChange"
-        @focus="handleChipDropdownOpen"
-      />
+      <div class="control select-control">
+        <label class="control-label">目标芯片</label>
+        <el-select-v2
+          :model-value="activeConfig.chipModel || ''"
+          class="control-select"
+          placeholder="请选择"
+          :options="chipOptions"
+          :filterable="true"
+          :loading="chipSearchLoading"
+          :virtual="true"
+          :scrollbar="true"
+          @change="handleChipChange"
+          @visible-change="handleChipVisibleChange"
+        />
+      </div>
     </div>
 
 

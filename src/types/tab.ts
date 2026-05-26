@@ -55,4 +55,6 @@ export type TabEvent = {
   'debugger-connected': { debuggerId: string };
   'debugger-error': { error: string };
   'debugger-disconnected': {};
+  'show-left-panel': undefined;
+  'show-right-panel': undefined;
 };
