@@ -177,11 +177,10 @@ const buttonType = computed(() => {
       />
     </div>
 
-    <!-- 流控按钮 -->
+    <!-- 流控按钮（任意时刻可选，便于连接前预设） -->
     <div class="control-row">
       <FlowControlButtons
         :value="activeConfig.flowControl || ''"
-        :disabled="!isConnected"
         @update="(v) => updateConfig('flowControl', v)"
       />
     </div>

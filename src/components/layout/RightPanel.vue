@@ -1,13 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch, onUnmounted } from 'vue';
-import { tabStore } from '../../stores/tabStore';
-import { getTabType } from '../../registry/tabTypeRegistry';
 import { TIMEOUT } from '../../constants';
-import type { TabConfigItem } from '../../types/tab';
-import SelectControl from '../panel/SelectControl.vue';
-import InputControl from '../panel/InputControl.vue';
-import SwitchControl from '../panel/SwitchControl.vue';
-import SliderControl from '../panel/SliderControl.vue';
 
 const props = defineProps<{
   visible?: boolean;
@@ -26,85 +19,10 @@ watch(() => props.initialPinned, (newVal) => {
 
 const isVisible = computed(() => props.visible ?? false);
 
-const activeConfig = computed(() => tabStore.activeTab.value?.config ?? {});
-
 const emit = defineEmits<{
   (e: 'pinned', value: boolean): void;
   (e: 'visibleChange', value: boolean): void;
 }>();
-
-function updateConfig(key: string, value: any) {
-  const activeTab = tabStore.activeTab.value;
-  if (!activeTab) return;
-
-  tabStore.updateTabConfig(activeTab.id, { [key]: value });
-}
-
-const configItems = computed(() => {
-  const activeTab = tabStore.activeTab.value;
-  if (!activeTab) return [];
-
-  const tabType = getTabType(activeTab.type);
-  return tabType?.configItems ?? [];
-});
-
-// 缓存 renderControl 结果，避免重复计算
-const renderedControls = computed(() => {
-  const items = configItems.value;
-  const controls: { key: string; control: ReturnType<typeof renderControl> }[] = new Array(items.length);
-  for (let i = 0; i < items.length; i++) {
-    controls[i] = { key: items[i].key, control: renderControl(items[i]) };
-  }
-  return controls;
-});
-
-function renderControl(item: TabConfigItem) {
-  const value = activeConfig.value[item.key] ?? item.defaultValue;
-
-  switch (item.type) {
-    case 'select':
-      return {
-        component: SelectControl,
-        props: {
-          label: item.label,
-          value,
-          options: item.options ?? [],
-        },
-        on: { update: (v: any) => updateConfig(item.key, v) },
-      };
-    case 'input':
-      return {
-        component: InputControl,
-        props: {
-          label: item.label,
-          value,
-        },
-        on: { update: (v: any) => updateConfig(item.key, v) },
-      };
-    case 'switch':
-      return {
-        component: SwitchControl,
-        props: {
-          label: item.label,
-          value,
-        },
-        on: { update: (v: any) => updateConfig(item.key, v) },
-      };
-    case 'slider':
-      return {
-        component: SliderControl,
-        props: {
-          label: item.label,
-          value,
-          min: item.min,
-          max: item.max,
-        },
-        on: { update: (v: any) => updateConfig(item.key, v) },
-      };
-    default:
-      return null;
-  }
-}
 
 function handleMouseLeave() {
   if (isPinned.value) return;
@@ -166,14 +84,7 @@ onUnmounted(() => {
       </el-button>
     </div>
     <div class="right-panel-content">
-      <template v-for="rc in renderedControls" :key="rc.key">
-        <component
-          v-if="rc.control"
-          :is="rc.control.component"
-          v-bind="rc.control.props"
-          v-on="rc.control.on"
-        />
-      </template>
+      <!-- 待后续补充 -->
     </div>
   </div>
 </template>
