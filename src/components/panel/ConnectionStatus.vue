@@ -26,6 +26,16 @@ const statusText = computed(() => {
 
 const statusClass = computed(() => status.value);
 
+// n-tag type 枚举与 el-tag 不同，单独映射
+const tagType = computed(() => {
+  switch (status.value) {
+    case 'connected': return 'success';
+    case 'error': return 'error';
+    case 'connecting': return 'warning';
+    default: return 'default';
+  }
+});
+
 async function handleToggle() {
   const config = tabStore.activeTab.value?.config;
   if (!config?.port) return;
@@ -60,18 +70,23 @@ const buttonType = computed(() => {
 
 <template>
   <div class="connection-status">
-    <el-tag :type="statusClass === 'connected' ? 'success' : statusClass === 'error' ? 'danger' : 'info'" size="small">
+    <n-tag
+      :type="tagType"
+      size="small"
+      :bordered="false"
+      style="background: rgba(255,255,255,0.05);"
+    >
       <span class="status-dot" :class="statusClass"></span>
       {{ statusText }}
-    </el-tag>
-    <el-button
+    </n-tag>
+    <n-button
       :type="buttonType"
       size="small"
       :disabled="status === 'connecting'"
       @click="handleToggle"
     >
       {{ buttonText }}
-    </el-button>
+    </n-button>
   </div>
 </template>
 

@@ -3,15 +3,14 @@
 
 <template>
   <div class="empty-page">
-    <el-empty description="暂无打开的标签页" :image-size="100">
-      <template #image>
+    <n-empty description="暂无打开的标签页" size="large">
+      <template #icon>
         <span class="custom-icon">📭</span>
       </template>
-      <template #description>
-        <span class="empty-text">暂无打开的标签页</span>
+      <template #extra>
+        <span class="empty-hint">点击右上角 "+" 按钮新建标签</span>
       </template>
-      <span class="empty-hint">点击右上角 "+" 按钮新建标签</span>
-    </el-empty>
+    </n-empty>
   </div>
 </template>
 

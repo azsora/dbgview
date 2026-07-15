@@ -18,11 +18,16 @@ const isEnabled = computed(() => {
 
 <template>
   <div class="debugger-status">
-    <el-tag :type="isEnabled ? 'success' : 'info'" size="small" class="status-tag">
+    <n-tag
+      :type="isEnabled ? 'success' : 'default'"
+      size="small"
+      :bordered="false"
+      class="status-tag"
+    >
       <span class="status-dot" :class="{ active: isEnabled }"></span>
       调试器
-    </el-tag>
-    <el-divider direction="vertical" />
+    </n-tag>
+    <n-divider vertical />
     <span class="status-item">{{ debuggerInfo }}</span>
   </div>
 </template>
@@ -60,7 +65,7 @@ const isEnabled = computed(() => {
   border-radius: 3px;
 }
 
-:deep(.el-divider) {
+:deep(.n-divider) {
   margin: 0 4px;
   background: rgba(255, 255, 255, 0.3);
 }

@@ -12,10 +12,10 @@ const emit = defineEmits<{
 <template>
   <div class="control input-control">
     <label class="control-label">{{ label }}</label>
-    <el-input
-      :model-value="value"
+    <n-input
+      :value="String(value)"
       class="control-input"
-      @input="emit('update', ($event as string))"
+      @update:value="(v: string) => emit('update', v)"
     />
   </div>
 </template>

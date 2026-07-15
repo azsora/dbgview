@@ -70,9 +70,9 @@ onUnmounted(() => {
   >
     <div class="right-panel-header">
       <span>属性面板</span>
-      <el-button
+      <n-button
         class="pin-btn"
-        :type="isPinned ? 'primary' : 'default'"
+        :type="isPinned ? 'primary' : 'tertiary'"
         size="small"
         text
         @click="togglePin"
@@ -81,7 +81,7 @@ onUnmounted(() => {
         <svg width="14" height="14" viewBox="0 0 24 24" :fill="isPinned ? 'var(--accent-color)' : 'var(--text-muted)'">
           <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/>
         </svg>
-      </el-button>
+      </n-button>
     </div>
     <div class="right-panel-content">
       <!-- 待后续补充 -->
@@ -121,9 +121,6 @@ onUnmounted(() => {
   padding: 4px;
 }
 
-:deep(.el-icon) {
-  font-size: 14px;
-}
 .right-panel-container.right-panel-pinned {
   border-left: 1px solid var(--border-color);
 }

@@ -14,7 +14,6 @@ const emit = defineEmits<{
   (e: 'dblclick'): void;
   (e: 'visibleChange', visible: boolean): void;
   (e: 'filter', query: string): void;
-  (e: 'scroll', event: Event): void;
 }>();
 
 const startTime = performance.now();
@@ -24,7 +23,8 @@ onMounted(() => {
   console.log('SelectControl mounted:', props.label, performance.now() - startTime, 'ms');
 });
 
-function handleChange(value: string | number) {
+function handleChange(value: string | number | null) {
+  if (value === null) return;
   emit('update', value);
 }
 
@@ -39,43 +39,30 @@ function handleBlur() {
 function handleVisibleChange(visible: boolean) {
   emit('visibleChange', visible);
 }
-
-function handleScroll(event: Event) {
-  emit('scroll', event);
-}
 </script>
 
 <template>
   <div class="control select-control">
     <label class="control-label">{{ label }}</label>
-    <el-select
-      :model-value="value"
+    <n-select
+      :value="value"
       class="control-select"
       placeholder="请选择"
       :filterable="filterable"
-      :allow-create="false"
-      :default-first-option="false"
-      :reserve-keyword="true"
-      :loading="false"
-      :virtual="true"
-      :scrollbar="true"
-      @change="handleChange"
+      :virtual-scroll="true"
+      :consistent-menu-width="true"
+      @update:value="handleChange"
       @focus="handleFocus"
       @blur="handleBlur"
-      @visible-change="handleVisibleChange"
-      @filter="emit('filter', $event)"
-      @scroll="handleScroll"
+      @update:show="handleVisibleChange"
     >
-      <el-option
+      <n-option
         v-for="opt in options"
         :key="String(opt.value)"
         :label="String(opt.label)"
-        :value="String(opt.value)"
+        :value="opt.value"
       />
-      <template #empty>
-        <span>空</span>
-      </template>
-    </el-select>
+    </n-select>
   </div>
 </template>
 

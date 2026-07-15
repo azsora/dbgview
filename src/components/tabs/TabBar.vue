@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import { AddOutline } from '@vicons/ionicons5';
 import { tabStore } from '../../stores/tabStore';
 import TabItem from './TabItem.vue';
 
@@ -52,19 +53,12 @@ function handleDrop(event: DragEvent) {
         @click="handleTabClick(tab.id)"
         @close="handleTabClose(tab.id)"
       />
-      <el-button class="new-tab-btn" @click="emit('newTab')" title="新建标签">
-        <el-icon><Plus /></el-icon>
-      </el-button>
+      <n-button class="new-tab-btn" @click="emit('newTab')" title="新建标签">
+        <n-icon><AddOutline /></n-icon>
+      </n-button>
     </div>
   </div>
 </template>
-
-<script lang="ts">
-import { Plus } from '@element-plus/icons-vue';
-export default {
-  components: { Plus },
-};
-</script>
 
 <style scoped>
 .tab-bar {

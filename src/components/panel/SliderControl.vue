@@ -14,12 +14,12 @@ const emit = defineEmits<{
 <template>
   <div class="control slider-control">
     <label class="control-label">{{ label }}</label>
-    <el-slider
-      :model-value="value"
+    <n-slider
+      :value="value"
       :min="min ?? 0"
       :max="max ?? 100"
       class="slider-component"
-      @input="emit('update', $event as number)"
+      @update:value="(v: number | [number, number]) => emit('update', v as number)"
     />
     <span class="slider-value">{{ value }}</span>
   </div>

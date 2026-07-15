@@ -66,8 +66,8 @@ async function loadChipOptions() {
 }
 
 // 芯片选择改变
-function handleChipChange(value: string | number) {
-  updateConfig('chipModel', String(value));
+function handleChipChange(value: string | number | null) {
+  updateConfig('chipModel', value == null ? '' : String(value));
 }
 
 // 芯片下拉打开
@@ -175,17 +175,17 @@ const buttonType = computed(() => {
     <div class="control-row">
       <div class="control select-control">
         <label class="control-label">目标芯片</label>
-        <el-select-v2
-          :model-value="activeConfig.chipModel || ''"
+        <n-select
+          :value="activeConfig.chipModel || ''"
           class="control-select"
           placeholder="请选择"
           :options="chipOptions"
           :filterable="true"
           :loading="chipSearchLoading"
-          :virtual="true"
-          :scrollbar="true"
-          @change="handleChipChange"
-          @visible-change="handleChipVisibleChange"
+          :virtual-scroll="true"
+          :consistent-menu-width="true"
+          @update:value="handleChipChange"
+          @update:show="handleChipVisibleChange"
         />
       </div>
     </div>
@@ -193,14 +193,14 @@ const buttonType = computed(() => {
 
     <!-- 连接/断开按钮 -->
     <div class="control-row">
-      <el-button
+      <n-button
         :type="buttonType"
         :disabled="isConnecting || !activeConfig.debuggerId"
         class="toggle-btn"
         @click="handleToggle"
       >
         {{ buttonText }}
-      </el-button>
+      </n-button>
     </div>
   </div>
 </template>

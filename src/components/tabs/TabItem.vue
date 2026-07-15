@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import { CloseOutline } from '@vicons/ionicons5';
 import type { Tab } from '../../types/tab';
 import { eventBus } from '../../eventBus';
 import { getTabType } from '../../registry/tabTypeRegistry';
@@ -45,18 +46,11 @@ function handleDragEnd(_e: DragEvent) {
   >
     <span v-if="tabIcon" class="tab-icon">{{ tabIcon }}</span>
     <span class="tab-title">{{ tab.title }}</span>
-    <el-icon class="tab-close" @click.stop="emit('close')">
-      <Close />
-    </el-icon>
+    <n-icon class="tab-close" @click.stop="emit('close')">
+      <CloseOutline />
+    </n-icon>
   </div>
 </template>
-
-<script lang="ts">
-import { Close } from '@element-plus/icons-vue';
-export default {
-  components: { Close },
-};
-</script>
 
 <style scoped>
 .tab-item {

@@ -12,9 +12,9 @@ const emit = defineEmits<{
 <template>
   <div class="control switch-control">
     <label class="control-label">{{ label }}</label>
-    <el-switch
-      :model-value="value"
-      @change="emit('update', $event)"
+    <n-switch
+      :value="value"
+      @update:value="(v: boolean) => emit('update', v)"
     />
   </div>
 </template>

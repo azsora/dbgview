@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted } from 'vue';
-import { ElMessage } from 'element-plus';
+import { message } from '../../main';
 import { tabStore } from '../../stores/tabStore';
 import { serialStore } from '../../stores/serialStore';
 import { debuggerStore } from '../../stores/debuggerStore';
@@ -99,7 +99,7 @@ onMounted(() => {
   });
 
   eventBus.on('serial-error', ({ error }) => {
-    ElMessage.error(`端口打开失败: ${error}`);
+    message.error(`端口打开失败: ${error}`);
   });
 });
 

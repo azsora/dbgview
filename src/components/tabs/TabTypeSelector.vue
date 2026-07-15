@@ -15,13 +15,14 @@ function handleSelect(type: string) {
 </script>
 
 <template>
-  <el-dialog
+  <n-modal
+    :show="true"
+    preset="card"
     title="选择标签类型"
-    :model-value="true"
-    width="320"
-    :close-on-click-modal="true"
+    style="width: 360px"
+    :mask-closable="true"
     @close="emit('close')"
-    @update:model-value="emit('close')"
+    @update:show="(v: boolean) => { if (!v) emit('close'); }"
   >
     <div class="type-grid">
       <div
@@ -34,7 +35,7 @@ function handleSelect(type: string) {
         <div class="type-name">{{ tabType.title }}</div>
       </div>
     </div>
-  </el-dialog>
+  </n-modal>
 </template>
 
 <style scoped>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { ElMessage } from 'element-plus';
+import { message } from '../../main';
 
 /*
  * 信号线控制组件
@@ -31,18 +31,14 @@ const signalDisabled = computed(() => props.hardwareFlowControl);
  * 硬件流控复选框变更处理
  * 直接下发更新，并弹出自动消除的消息提示告知用户流控状态变更
  */
-function handleFlowControlChange(v: boolean | string | number) {
+function handleFlowControlChange(v: boolean) {
   const next = !!v;
   emit('updateHardwareFlowControl', next);
   // 自动消除提示：开启时说明手动控制禁用，关闭时说明恢复手动控制
   const effect = next
     ? '已开启硬件流控（RTS/CTS），DTR/RTS 手动控制已禁用，重新打开串口后生效'
     : '已关闭硬件流控，恢复 DTR/RTS 手动控制，重新打开串口后生效';
-  ElMessage({
-    message: effect,
-    type: next ? 'success' : 'info',
-    duration: 3000,
-  });
+  message.create(effect, { type: next ? 'success' : 'info', duration: 3000 });
 }
 
 function toggleDtr() {
@@ -58,49 +54,49 @@ function toggleRts() {
 
 <template>
   <div class="flow-control">
-    <el-checkbox
-      :model-value="hardwareFlowControl"
+    <n-checkbox
+      :checked="hardwareFlowControl"
       size="small"
-      @change="handleFlowControlChange"
+      @update:checked="handleFlowControlChange"
     />
-    <el-button-group class="signal-group">
+    <n-button-group class="signal-group">
       <!-- DSR/CTS 输入信号：只读状态显示 -->
-      <el-button
+      <n-button
         size="small"
-        :type="dsr ? 'success' : 'info'"
+        :type="dsr ? 'success' : 'tertiary'"
         :class="['signal-btn', { 'signal-on': dsr }]"
         disabled
       >
         DSR
-      </el-button>
-      <el-button
+      </n-button>
+      <n-button
         size="small"
-        :type="cts ? 'success' : 'info'"
+        :type="cts ? 'success' : 'tertiary'"
         :class="['signal-btn', { 'signal-on': cts }]"
         disabled
       >
         CTS
-      </el-button>
+      </n-button>
       <!-- DTR/RTS 输出信号：手动模式下可控制 -->
-      <el-button
+      <n-button
         size="small"
-        :type="dtr ? 'primary' : 'default'"
+        :type="dtr ? 'primary' : 'tertiary'"
         :disabled="signalDisabled"
         :class="['signal-btn', { 'signal-on': dtr }]"
         @click="toggleDtr"
       >
         DTR
-      </el-button>
-      <el-button
+      </n-button>
+      <n-button
         size="small"
-        :type="rts ? 'primary' : 'default'"
+        :type="rts ? 'primary' : 'tertiary'"
         :disabled="signalDisabled"
         :class="['signal-btn', { 'signal-on': rts }]"
         @click="toggleRts"
       >
         RTS
-      </el-button>
-    </el-button-group>
+      </n-button>
+    </n-button-group>
   </div>
 </template>
 

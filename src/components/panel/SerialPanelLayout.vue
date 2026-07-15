@@ -261,14 +261,14 @@ const buttonType = computed(() => {
 
     <!-- 打开/关闭按钮 -->
     <div class="control-row">
-      <el-button
+      <n-button
         :type="buttonType"
         :disabled="isConnecting || !activeConfig.port"
         class="toggle-btn"
         @click="handleToggle"
       >
         {{ buttonText }}
-      </el-button>
+      </n-button>
     </div>
 
     <!-- 扩展配置 -->
@@ -278,8 +278,8 @@ const buttonType = computed(() => {
       <!-- 接收设置 -->
       <div class="expand-row">
         <label class="expand-label">接收脚本</label>
-        <el-input
-          :model-value="activeConfig.receiveScript || ''"
+        <n-input
+          :value="activeConfig.receiveScript || ''"
           placeholder="选择脚本文件..."
           readonly
           @click="selectScriptFile('receive')"
@@ -289,8 +289,8 @@ const buttonType = computed(() => {
       <!-- 发送设置 -->
       <div class="expand-row">
         <label class="expand-label">发送脚本</label>
-        <el-input
-          :model-value="activeConfig.sendScript || ''"
+        <n-input
+          :value="activeConfig.sendScript || ''"
           placeholder="选择脚本文件..."
           readonly
           @click="selectScriptFile('send')"
@@ -360,7 +360,7 @@ const buttonType = computed(() => {
 }
 
 /* 仅扩展配置区的脚本输入框显示 pointer 光标，避免误伤波特率可输入框 */
-.expand-section :deep(.el-input) {
+.expand-section :deep(.n-input) {
   cursor: pointer;
 }
 </style>

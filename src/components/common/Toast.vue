@@ -1,13 +1,10 @@
 <script setup lang="ts">
-import { ElMessage } from 'element-plus';
+import { message } from '../../main';
 
 // 导出 showToast 方法供外部调用
-const showToast = (message: string, type: 'success' | 'warning' | 'error' | 'info' = 'error', duration = 3000) => {
-  ElMessage({
-    message,
-    type,
-    duration,
-  });
+// 使用 Naive UI 全局离散 API（createDiscreteApi），与原 ElMessage 调用风格一致
+const showToast = (text: string, type: 'success' | 'warning' | 'error' | 'info' = 'error', duration = 3000) => {
+  message.create(text, { type, duration });
 };
 
 // 暴露给外部使用
@@ -17,5 +14,5 @@ defineExpose({
 </script>
 
 <template>
-  <!-- 不再需要本地模板，ElMessage 会自动渲染 -->
+  <!-- 不再需要本地模板，Naive UI message 会在全局离散容器中渲染 -->
 </template>
