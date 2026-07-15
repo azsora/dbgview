@@ -21,13 +21,14 @@ tauri-build = { version = "2", features = [] }
 tauri = { version = "2", features = [] }
 tauri-plugin-opener = "2"
 tauri-plugin-dialog = "2"
+# Tauri 官方日志插件（提供日志记录后端，业务代码继续使用 log crate 宏）
+tauri-plugin-log = "2"
+# log crate：tauri-plugin-log 不会 re-export，业务代码中 `use log::{info, error}` 需保留
+log = "0.4"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 # 跨平台串口通信
 serialport = "4"
-# 日志
-log = "0.4"
-env_logger = "0.11"
 # 嵌入式调试
 probe-rs = "0.31"
 # 异步运行时

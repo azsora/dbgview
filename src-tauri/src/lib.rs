@@ -11,16 +11,13 @@ use commands::{DebuggerState, DebuggerManager, SerialState, serial_list_ports, s
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    // 初始化日志记录器
-    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info"))
-        .format_timestamp_millis()
-        .init();
-
     log::info!("[应用] 调试工具启动...");
 
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
+        // 初始化 Tauri 官方日志插件（兼容 log crate API，业务代码 info!/warn!/error! 无需修改）
+        .plugin(tauri_plugin_log::Builder::new().build())
         .manage(SerialState(std::sync::Mutex::new(serial::SerialManager::new())))
         .manage(DebuggerState(std::sync::Mutex::new(DebuggerManager::new())))
         .invoke_handler(tauri::generate_handler![
