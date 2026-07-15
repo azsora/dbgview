@@ -302,6 +302,56 @@ function setSendInput(value: string) {
   saveState(state);
 }
 
+/**
+ * 设置 DTR 信号线电平（需已连接）
+ */
+async function setDtr(dtr: boolean): Promise<boolean> {
+  if (!isConnected.value) return false;
+  try {
+    await invoke('serial_set_dtr', { dtr });
+    return true;
+  } catch (e) {
+    state.errorMessage = `设置 DTR 失败: ${e}`;
+    return false;
+  }
+}
+
+/**
+ * 设置 RTS 信号线电平（需已连接）
+ */
+async function setRts(rts: boolean): Promise<boolean> {
+  if (!isConnected.value) return false;
+  try {
+    await invoke('serial_set_rts', { rts });
+    return true;
+  } catch (e) {
+    state.errorMessage = `设置 RTS 失败: ${e}`;
+    return false;
+  }
+}
+
+/**
+ * 读取 CTS 输入信号线状态
+ */
+async function readCts(): Promise<boolean> {
+  try {
+    return await invoke<boolean>('serial_read_cts');
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * 读取 DSR 输入信号线状态
+ */
+async function readDsr(): Promise<boolean> {
+  try {
+    return await invoke<boolean>('serial_read_dsr');
+  } catch {
+    return false;
+  }
+}
+
 // 辅助函数
 function hexToBytes(hex: string): number[] {
   const cleaned = hex.replace(/\s/g, '');
@@ -375,4 +425,8 @@ export const serialStore = {
   resetTxCounter,
   resetRxCounter,
   setSendInput,
+  setDtr,
+  setRts,
+  readCts,
+  readDsr,
 };

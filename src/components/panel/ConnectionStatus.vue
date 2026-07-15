@@ -39,7 +39,7 @@ async function handleToggle() {
       data_bits: config.dataBits,
       stop_bits: config.stopBits,
       parity: config.parity,
-      flow_control: config.flowControl,
+      flow_control: config.hardwareFlowControl ? 'RTS/CTS' : 'None',
     });
   }
 }

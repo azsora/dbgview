@@ -125,6 +125,68 @@ impl SerialManager {
         }
     }
 
+    /// 设置 DTR 信号线电平
+    pub fn set_dtr(&mut self, level: bool) -> Result<(), String> {
+        match &self.port {
+            Some(port_arc) => {
+                let mut port_guard = port_arc.lock().map_err(|e| e.to_string())?;
+                match &mut *port_guard {
+                    Some(port) => port.write_data_terminal_ready(level).map_err(|e| {
+                        error!("[串口] 设置 DTR 失败: {}", e);
+                        format!("设置 DTR 失败: {}", e)
+                    }),
+                    None => Err("端口未打开".to_string()),
+                }
+            }
+            None => Err("端口未打开".to_string()),
+        }
+    }
+
+    /// 设置 RTS 信号线电平
+    pub fn set_rts(&mut self, level: bool) -> Result<(), String> {
+        match &self.port {
+            Some(port_arc) => {
+                let mut port_guard = port_arc.lock().map_err(|e| e.to_string())?;
+                match &mut *port_guard {
+                    Some(port) => port.write_request_to_send(level).map_err(|e| {
+                        error!("[串口] 设置 RTS 失败: {}", e);
+                        format!("设置 RTS 失败: {}", e)
+                    }),
+                    None => Err("端口未打开".to_string()),
+                }
+            }
+            None => Err("端口未打开".to_string()),
+        }
+    }
+
+    /// 读取 CTS 输入信号线状态
+    pub fn read_cts(&mut self) -> Result<bool, String> {
+        match &self.port {
+            Some(port_arc) => {
+                let mut port_guard = port_arc.lock().map_err(|e| e.to_string())?;
+                match &mut *port_guard {
+                    Some(port) => port.read_clear_to_send().map_err(|e| format!("读取 CTS 失败: {}", e)),
+                    None => Err("端口未打开".to_string()),
+                }
+            }
+            None => Err("端口未打开".to_string()),
+        }
+    }
+
+    /// 读取 DSR 输入信号线状态
+    pub fn read_dsr(&mut self) -> Result<bool, String> {
+        match &self.port {
+            Some(port_arc) => {
+                let mut port_guard = port_arc.lock().map_err(|e| e.to_string())?;
+                match &mut *port_guard {
+                    Some(port) => port.read_data_set_ready().map_err(|e| format!("读取 DSR 失败: {}", e)),
+                    None => Err("端口未打开".to_string()),
+                }
+            }
+            None => Err("端口未打开".to_string()),
+        }
+    }
+
     pub fn is_open(&self) -> bool {
         self.port.is_some()
     }
@@ -155,17 +217,20 @@ impl SerialManager {
                     break;
                 }
 
-                let mut port_guard = match port_arc.lock() {
-                    Ok(g) => g,
-                    Err(_) => break,
-                };
+                // 仅在 read 期间持有锁，sleep 时释放，避免阻塞信号线控制/读取命令
+                let read_result = {
+                    let mut port_guard = match port_arc.lock() {
+                        Ok(g) => g,
+                        Err(_) => break,
+                    };
+                    let port = match &mut *port_guard {
+                        Some(p) => p,
+                        None => break,
+                    };
+                    port.read(&mut buf)
+                }; // port_guard 在此释放，sleep 期间不持锁
 
-                let port = match &mut *port_guard {
-                    Some(p) => p,
-                    None => break,
-                };
-
-                match port.read(&mut buf) {
+                match read_result {
                     Ok(n) if n > 0 => {
                         let data = buf[..n].to_vec();
                         info!("[串口] 接收: {} bytes", n);

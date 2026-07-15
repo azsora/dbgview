@@ -9,10 +9,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## 开发命令
 
 ```bash
-npm run dev          # 前端开发
-npm run build        # 前端构建
-npm run tauri dev    # Tauri 开发（前端+Rust后端）
-npm run tauri build  # Tauri 构建
+pnpm install      # 安装前端依赖
+pnpm dev          # 前端开发
+pnpm build        # 前端构建
+pnpm tauri dev    # Tauri 开发（前端+Rust后端）
+pnpm tauri build  # Tauri 构建
 ```
 
 ## 技术架构
@@ -28,6 +29,7 @@ src/
 │   ├── tabStore.ts            # Tab 状态
 │   ├── serialStore.ts         # 串口状态
 │   └── debuggerStore.ts       # 调试助手状态
+├── composables/               # 组合式逻辑（useBaudRateOptions 等）
 ├── types/tab.ts               # Tab 类型定义
 ├── registry/                  # 注册表
 │   ├── tabTypeRegistry.ts     # Tab 类型定义（panelComponent/contentComponent）

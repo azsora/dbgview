@@ -7,7 +7,7 @@ fn greet(name: &str) -> String {
 mod commands;
 mod serial;
 
-use commands::{DebuggerState, DebuggerManager, SerialState, serial_list_ports, serial_open, serial_close, serial_write, serial_is_open, debugger_list_probes, debugger_list_chips, debugger_list_chips_count, debugger_list_chips_paged, debugger_connect, debugger_disconnect, debugger_is_connected};
+use commands::{DebuggerState, DebuggerManager, SerialState, serial_list_ports, serial_open, serial_close, serial_write, serial_is_open, serial_set_dtr, serial_set_rts, serial_read_cts, serial_read_dsr, debugger_list_probes, debugger_list_chips, debugger_list_chips_count, debugger_list_chips_paged, debugger_connect, debugger_disconnect, debugger_is_connected};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -30,6 +30,10 @@ pub fn run() {
             serial_close,
             serial_write,
             serial_is_open,
+            serial_set_dtr,
+            serial_set_rts,
+            serial_read_cts,
+            serial_read_dsr,
             debugger_list_probes,
             debugger_list_chips,
             debugger_list_chips_count,

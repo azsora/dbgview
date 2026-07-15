@@ -109,3 +109,41 @@ pub fn serial_is_open(state: State<SerialState>) -> Result<bool, String> {
     info!("[命令] serial_is_open 返回: {}", is_open);
     Ok(is_open)
 }
+
+#[tauri::command]
+pub fn serial_set_dtr(state: State<SerialState>, dtr: bool) -> Result<(), String> {
+    info!("[命令] serial_set_dtr 被调用: dtr={}", dtr);
+    let mut manager = state.0.lock().map_err(|e| {
+        error!("[命令] 获取串口管理器锁失败: {}", e);
+        e.to_string()
+    })?;
+    manager.set_dtr(dtr)
+}
+
+#[tauri::command]
+pub fn serial_set_rts(state: State<SerialState>, rts: bool) -> Result<(), String> {
+    info!("[命令] serial_set_rts 被调用: rts={}", rts);
+    let mut manager = state.0.lock().map_err(|e| {
+        error!("[命令] 获取串口管理器锁失败: {}", e);
+        e.to_string()
+    })?;
+    manager.set_rts(rts)
+}
+
+#[tauri::command]
+pub fn serial_read_cts(state: State<SerialState>) -> Result<bool, String> {
+    let mut manager = state.0.lock().map_err(|e| {
+        error!("[命令] 获取串口管理器锁失败: {}", e);
+        e.to_string()
+    })?;
+    manager.read_cts()
+}
+
+#[tauri::command]
+pub fn serial_read_dsr(state: State<SerialState>) -> Result<bool, String> {
+    let mut manager = state.0.lock().map_err(|e| {
+        error!("[命令] 获取串口管理器锁失败: {}", e);
+        e.to_string()
+    })?;
+    manager.read_dsr()
+}

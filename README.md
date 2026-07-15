@@ -23,13 +23,13 @@
 ## 开发命令
 
 ```bash
-npm install          # 安装前端依赖
-npm run dev          # 前端开发（Vite，端口 3000）
-npm run build        # 前端构建（vue-tsc 类型检查 + vite build）
-npm run tauri dev    # Tauri 开发（前端 + Rust 后端）
-npm run tauri build  # Tauri 构建（生成安装包）
-cargo build          # 仅编译 Rust 后端
-vue-tsc              # TypeScript 类型检查
+pnpm install       # 安装前端依赖
+pnpm dev           # 前端开发（Vite，端口 3000）
+pnpm build         # 前端构建（vue-tsc 类型检查 + vite build）
+pnpm tauri dev     # Tauri 开发（前端 + Rust 后端）
+pnpm tauri build   # Tauri 构建（生成安装包）
+cargo build        # 仅编译 Rust 后端
+pnpm exec vue-tsc  # TypeScript 类型检查
 ```
 
 ## 项目结构

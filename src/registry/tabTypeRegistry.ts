@@ -83,7 +83,6 @@ export const serialConfigTemplates = {
     type: 'select' as const,
     options: [
       { label: '1', value: 1 },
-      { label: '1.5', value: 1.5 },
       { label: '2', value: 2 },
     ],
     defaultValue: 1,
@@ -96,21 +95,29 @@ export const serialConfigTemplates = {
       { label: 'None', value: 'None' },
       { label: 'Odd', value: 'Odd' },
       { label: 'Even', value: 'Even' },
-      { label: 'Mark', value: 'Mark' },
-      { label: 'Space', value: 'Space' },
     ],
     defaultValue: 'None',
   },
-  flowControl: {
-    key: 'flowControl',
-    label: '流控',
-    type: 'select' as const,
-    options: [
-      { label: 'None', value: 'None' },
-      { label: 'RTS/CTS', value: 'RTS/CTS' },
-      { label: 'XON/XOFF', value: 'XON/XOFF' },
-    ],
-    defaultValue: 'None',
+  // 硬件流控开关（勾选=RTS/CTS 硬件流控模式，未勾选=手动信号线控制）
+  hardwareFlowControl: {
+    key: 'hardwareFlowControl',
+    label: '硬件流控',
+    type: 'switch' as const,
+    defaultValue: false,
+  },
+  // DTR 输出信号线电平（手动模式下可控）
+  dtr: {
+    key: 'dtr',
+    label: 'DTR',
+    type: 'switch' as const,
+    defaultValue: false,
+  },
+  // RTS 输出信号线电平（手动模式下可控）
+  rts: {
+    key: 'rts',
+    label: 'RTS',
+    type: 'switch' as const,
+    defaultValue: false,
   },
 };
 
@@ -153,7 +160,9 @@ const builtinTypes: TabTypeDefinition[] = [
       serialConfigTemplates.dataBits,
       serialConfigTemplates.stopBits,
       serialConfigTemplates.parity,
-      serialConfigTemplates.flowControl,
+      serialConfigTemplates.hardwareFlowControl,
+      serialConfigTemplates.dtr,
+      serialConfigTemplates.rts,
     ],
     panelComponent: 'SerialPanel',
     contentComponent: 'SerialContent',
